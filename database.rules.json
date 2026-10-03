@@ -1,5 +1,19 @@
 {
   "rules": {
+    "youtube_room": {
+      ".read": true,
+      ".write": true,
+      ".validate": "newData.hasChildren(['videoId', 'playing', 'position', 'updatedAt'])",
+      "videoId": { ".validate": "newData.isString() && newData.val().matches(/^[a-zA-Z0-9_-]{11}$/)" },
+      "playing": { ".validate": "newData.isBoolean()" },
+      "position": { ".validate": "newData.isNumber() && newData.val() >= 0" },
+      "updatedAt": { ".validate": "newData.isNumber()" },
+      "$other": { ".validate": false }
+    },
+    "memoryCorner": {
+      ".read": true,
+      ".write": true
+    },
     "status": {
       ".read": true,
       ".write": true

@@ -3170,7 +3170,49 @@ body.theme-orange {
     filter: grayscale(0.5);
 }
 
+@media (min-width: 641px) {
+    .user-status-widget {
+        padding: 10px;
+    }
+
+    .status-item {
+        min-width: 0;
+        gap: 8px;
+    }
+
+    .status-icon {
+        flex: 0 0 auto;
+        font-size: 1.25rem;
+    }
+
+    .status-item > span:not(.status-icon) {
+        display: flex;
+        flex-direction: column;
+        gap: 2px;
+        min-width: 0;
+        line-height: 1.35;
+    }
+
+    .status-text {
+        display: block;
+        font-size: 0.68rem;
+        font-weight: 600;
+        white-space: nowrap;
+    }
+}
+
 /* BẢNG LỊCH THEO THÁNG MÀU XANH LÁ TƯƠI SÁNG */
+.status-last-seen {
+    font-size: 0.6rem;
+    font-weight: 500;
+    line-height: 1.4;
+    overflow-wrap: anywhere;
+}
+
+@media (max-width: 640px) {
+    .status-last-seen { font-size: 0.5rem; max-width: 52px; text-align: center; }
+}
+
 .month-calendar-widget {
     background: rgba(255, 255, 255, 0.93);
     backdrop-filter: blur(8px);

@@ -2896,64 +2896,6 @@ function checkSitePassword() {
     }
 }
 
-function selectUserRole(roleName) {
-    sessionStorage.setItem('active_user_role', roleName);
-    sessionStorage.setItem('skey_pau_unlocked', 'true');
-
-    // 1. Mở khóa giao diện ngay lập tức
-    const overlay = document.getElementById('passLockOverlay');
-    if (overlay) overlay.classList.add('unlocked');
-    if (typeof createHeartEffect === 'function') createHeartEffect();
-
-    // 2. Cập nhật trạng thái Online lên Đám mây Firebase
-    if (typeof database !== 'undefined' && database !== null) {
-        try {
-            // Đặt trạng thái online cho bản thân
-            const myStatusRef = database.ref('status/' + roleName);
-            myStatusRef.set({ online: true, lastSeen: Date.now() });
-            myStatusRef.onDisconnect().set({ online: false, lastSeen: Date.now() });
-
-            // Lắng nghe trạng thái Online/Offline của CẢ HAI
-            database.ref('status').on('value', (snapshot) => {
-                const data = snapshot.val();
-                if (!data) return;
-
-                // Cập nhật khung Skey
-                const skeyElem = document.getElementById('statusSkey');
-                if (skeyElem) {
-                    if (data.Skey && data.Skey.online) {
-                        skeyElem.className = 'status-item online';
-                        skeyElem.querySelector('.status-text').innerText = 'đang online';
-                    } else {
-                        skeyElem.className = 'status-item offline';
-                        skeyElem.querySelector('.status-text').innerText = 'đang offline';
-                    }
-                }
-
-                // Cập nhật khung Pâu
-                const pauElem = document.getElementById('statusPau');
-                if (pauElem) {
-                    if (data.Pâu && data.Pâu.online) {
-                        pauElem.className = 'status-item online';
-                        pauElem.querySelector('.status-text').innerText = 'đang online';
-                    } else {
-                        pauElem.className = 'status-item offline';
-                        pauElem.querySelector('.status-text').innerText = 'đang offline';
-                    }
-                }
-            });
-        } catch (err) {
-            console.error("Lỗi kết nối Firebase Status:", err);
-        }
-    }
-
-    // 3. Lắng nghe Thiệp & Thư Góc Tâm Tình Realtime
-    setTimeout(() => {
-        if (typeof listenForRealtimeCards === 'function') listenForRealtimeCards(roleName);
-        if (typeof listenForRealtimeLetters === 'function') listenForRealtimeLetters();
-    }, 600);
-}
-
 function handlePassEnter(e) {
     if (e.key === 'Enter') checkSitePassword();
 }
@@ -3216,7 +3158,7 @@ function sendGameInvitation(gameType) {
     // Chỉ gửi lời mời khi người kia đang online để tránh tạo lời mời không ai nhận được.
     database.ref(`status/${recipient}`).once('value').then((snapshot) => {
         const recipientStatus = snapshot.val();
-        if (!recipientStatus || recipientStatus.online !== true) {
+        if (!window.isRoleOnline(recipientStatus)) {
             return { sent: false };
         }
 
@@ -3382,41 +3324,10 @@ function initFirebaseStatus() {
     if (typeof database !== 'undefined' && database !== null) {
         try {
             // 1. Đặt trạng thái Online cho bản thân & tự chuyển Offline khi mất mạng / đóng tab
-            const myStatusRef = database.ref('status/' + activeRole);
-            myStatusRef.set({ online: true, lastSeen: Date.now() });
-            myStatusRef.onDisconnect().set({ online: false, lastSeen: Date.now() });
+            window.startPresence(activeRole);
+            if (window.presenceFeaturesRole === activeRole) return;
+            window.presenceFeaturesRole = activeRole;
 
-            // 2. Lắng nghe trạng thái thời gian thực của cả Skey & Pâu từ Firebase
-            database.ref('status').on('value', (snapshot) => {
-                const data = snapshot.val();
-                if (!data) return;
-
-                // Cập nhật giao diện Skey
-                const skeyElem = document.getElementById('statusSkey');
-                if (skeyElem) {
-                    if (data.Skey && data.Skey.online) {
-                        skeyElem.className = 'status-item online';
-                        skeyElem.querySelector('.status-text').innerText = 'Skey đã online';
-                    } else {
-                        skeyElem.className = 'status-item offline';
-                        skeyElem.querySelector('.status-text').innerText = 'Skey đã offline';
-                    }
-                }
-
-                // Cập nhật giao diện Pâu
-                const pauElem = document.getElementById('statusPau');
-                if (pauElem) {
-                    if (data.Pâu && data.Pâu.online) {
-                        pauElem.className = 'status-item online';
-                        pauElem.querySelector('.status-text').innerText = 'Pâu đã online';
-                    } else {
-                        pauElem.className = 'status-item offline';
-                        pauElem.querySelector('.status-text').innerText = 'Pâu đã offline';
-                    }
-                }
-            });
-
-            // 3. Kích hoạt lắng nghe Bao thư hồng, Thiệp & Cún
             if (typeof listenForRealtimeLetters === 'function') listenForRealtimeLetters();
             if (typeof listenForRealtimeCards === 'function') listenForRealtimeCards(activeRole);
             if (typeof listenForRealtimePet === 'function') listenForRealtimePet(); // 👈 Bổ sung dòng này vào đây!

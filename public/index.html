@@ -6,6 +6,7 @@
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>Skey & Pâu ❤️ Hành Trình Popo</title>
     <link rel="stylesheet" href="css/style.css">
+    <link rel="stylesheet" href="css/watch-together.css">
     <link
         href="https://fonts.googleapis.com/css2?family=Dancing+Script:wght@700&family=Quicksand:wght@400;600;700&display=swap"
         rel="stylesheet">
@@ -94,15 +95,16 @@
             <div class="user-status-widget">
                 <div id="statusPau" class="status-item offline">
                     <span class="status-icon">🐱</span>
-                    <span>Pâu<span class="status-text">đang offline</span></span>
+                    <span>Pâu<span class="status-text">đang offline</span><small class="status-last-seen" hidden></small></span>
                 </div>
                 <div id="statusSkey" class="status-item offline">
                     <span class="status-icon">🐶</span>
-                    <span>Skey<span class="status-text">đang offline</span></span>
+                    <span>Skey<span class="status-text">đang offline</span><small class="status-last-seen" hidden></small></span>
                 </div>
             </div>
 
             <!-- Nút Thiệp Tình Yêu -->
+            <button class="watch-open-btn" id="watchOpen" type="button">▶ Xem YouTube cùng nhau</button>
             <div class="card-widget-btn" onclick="openCardModal()" title="Mở Thiệp Tình Yêu">
                 <span class="card-btn-icon">💌</span>
                 <span class="card-btn-text">Thiệp Tình Yêu</span>
@@ -1049,11 +1051,37 @@
         </div>
     </div>
     <!-- 1. Thư viện Firebase -->
+    <div id="watchModal" class="watch-modal hidden" role="dialog" aria-modal="true" aria-labelledby="watchTitle">
+        <section class="watch-card">
+            <button id="watchClose" class="watch-close" type="button" aria-label="Đóng phòng xem">×</button>
+            <p class="watch-eyebrow">MỘT CHIẾC HẸN HÒ TẠI NHÀ ♡</p>
+            <h2 id="watchTitle">YouTube cùng nhau</h2>
+            <p>Cùng một video, cùng một khoảnh khắc. Cả hai hãy mở phòng này để xem nhé!</p>
+            <form id="watchForm" class="watch-form">
+                <label for="watchUrl" class="watch-sr-only">Đường dẫn video YouTube</label>
+                <input id="watchUrl" type="text" placeholder="Dán link YouTube hoặc Shorts…" required autocomplete="off">
+                <button id="watchLoad" type="submit" disabled>Chọn video</button>
+            </form>
+            <div class="watch-screen"><div id="watchPlayer"></div></div>
+            <div class="watch-controls">
+                <button id="watchPlay" type="button" disabled>▶ Phát</button>
+                <button id="watchPause" type="button" disabled>⏸ Tạm dừng</button>
+                <button id="watchJoin" type="button" disabled>♡ Bắt kịp phòng xem</button>
+                <label class="watch-volume"><input id="watchMute" type="checkbox"> Tắt tiếng máy này</label>
+            </div>
+            <label class="watch-timeline" for="watchSeek">Tua chung <span id="watchTime">0:00 / 0:00</span></label>
+            <input id="watchSeek" type="range" min="0" max="0" value="0" step="1" disabled aria-label="Tua video cho cả hai">
+            <p id="watchStatus" class="watch-status" role="status" aria-live="polite">Đang kết nối phòng xem…</p>
+            <p class="watch-hint">Dùng các nút bên dưới video để phát, tạm dừng và tua cho cả hai. Nếu chưa nghe thấy tiếng, bấm “Bắt kịp phòng xem”.</p>
+        </section>
+    </div>
     <script src="https://www.gstatic.com/firebasejs/10.8.0/firebase-app-compat.js"></script>
     <script src="https://www.gstatic.com/firebasejs/10.8.0/firebase-database-compat.js"></script>
 
     <!-- 2. File script của web -->
+    <script src="js/presence.js"></script>
     <script src="js/script.js"></script>
+    <script src="js/watch-together.js"></script>
 </body>
 
 </html>
