@@ -24,6 +24,32 @@
       ".read": true,
       ".write": true
     },
+    "youtube_state": {
+      ".read": true,
+      ".write": true,
+      ".validate": "newData.hasChildren(['videoId', 'playing', 'position', 'updatedAt', 'updatedBy', 'clientId'])",
+      "videoId": {
+        ".validate": "newData.isString() && newData.val().matches(/^[A-Za-z0-9_-]{11}$/)"
+      },
+      "playing": {
+        ".validate": "newData.isBoolean()"
+      },
+      "position": {
+        ".validate": "newData.isNumber() && newData.val() >= 0"
+      },
+      "updatedAt": {
+        ".validate": "newData.isNumber()"
+      },
+      "updatedBy": {
+        ".validate": "newData.isString() && newData.val().length <= 30"
+      },
+      "clientId": {
+        ".validate": "newData.isString() && newData.val().length <= 100"
+      },
+      "$other": {
+        ".validate": false
+      }
+    },
     "music_state": {
       ".read": true,
       ".write": true
@@ -47,6 +73,34 @@
     "word_game": {
       ".read": true,
       ".write": true
+    },
+    "memory_corner": {
+      ".read": true,
+      ".write": true,
+      "$memory": {
+        ".validate": "newData.hasChildren(['title', 'image', 'date', 'category', 'note', 'createdAt'])",
+        "title": {
+          ".validate": "newData.isString() && newData.val().length > 0 && newData.val().length <= 70"
+        },
+        "image": {
+          ".validate": "newData.isString() && newData.val().length <= 3000000 && newData.val().matches(/^data:image\\/(jpeg|png|webp);base64,[A-Za-z0-9+\\/=]+$/)"
+        },
+        "date": {
+          ".validate": "newData.isString() && (newData.val() == '' || newData.val().matches(/^[0-9]{4}-[0-9]{2}-[0-9]{2}$/))"
+        },
+        "category": {
+          ".validate": "newData.val() == 'food' || newData.val() == 'object' || newData.val() == 'place' || newData.val() == 'moment'"
+        },
+        "note": {
+          ".validate": "newData.isString() && newData.val().length <= 220"
+        },
+        "createdAt": {
+          ".validate": "newData.isNumber() && newData.val() >= 0"
+        },
+        "$other": {
+          ".validate": false
+        }
+      }
     }
   }
 }
