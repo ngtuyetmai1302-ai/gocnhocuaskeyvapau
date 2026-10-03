@@ -1,0 +1,94 @@
+    <!-- MODAL ĐẶT TÊN CÚN XINH XẮN -->
+    <div id="petNameModal" class="modal hidden">
+        <div class="pet-name-modal-content">
+            <span class="close-btn" onclick="closePetNameModal()">&times;</span>
+            <div class="pet-name-header">
+                <h3>🐶 ĐẶT TÊN BÉ CÚN 🐾</h3>
+            </div>
+            <p class="pet-name-hint">
+                Hãy chọn một cái tên thật xinh xắn cho bé cún của Skey & Pâu nhé!<br>
+                <small>⚠️ Lưu ý: Tên chỉ đặt 1 lần duy nhất và không thể đổi lại</small>
+            </p>
+            <div class="pet-name-input-box">
+                <input type="text" id="petNameInput" placeholder="Nhập tên bé cún (VD: Mây, Bơ, Cún...)" maxlength="15">
+                <button class="modal-btn" onclick="savePetName()">Xác Nhận Đặt Tên ❤️</button>
+            </div>
+        </div>
+    </div>
+
+    <!-- KHUNG TỦ ĐỒ CỦA CÚN (LEVEL 4 -> 10) -->
+    <div id="closetModal" class="modal hidden">
+        <div class="closet-modal-content">
+            <span class="close-btn" onclick="closeCloset()">&times;</span>
+            <h3>👕 TỦ ĐỒ CỦA BÉ CÚN 🐾</h3>
+            <p class="closet-hint">Mở khóa trang phục mới khi lên Level (Level 4 ➔ 10)</p>
+
+            <div class="outfit-grid">
+                <!-- Bộ 1 (Lv 4) -->
+                <div id="outfitCard1" class="outfit-card locked" onclick="selectOutfit(1)">
+                    <div class="outfit-img-box">
+                        <img src="assets/images/dog-outfit1.png" alt="Bộ 1">
+                        <span class="lock-icon">🔒</span>
+                    </div>
+                    <p>Bộ Xinh Xắn (Lv 4)</p>
+                </div>
+
+                <!-- Bộ 2 (Lv 5) -->
+                <div id="outfitCard2" class="outfit-card locked" onclick="selectOutfit(2)">
+                    <div class="outfit-img-box">
+                        <img src="assets/images/dog-outfit2.png" alt="Bộ 2">
+                        <span class="lock-icon">🔒</span>
+                    </div>
+                    <p>Bộ Dễ Thương (Lv 5)</p>
+                </div>
+
+                <!-- Bộ 3 (Lv 6) -->
+                <div id="outfitCard3" class="outfit-card locked" onclick="selectOutfit(3)">
+                    <div class="outfit-img-box">
+                        <img src="assets/images/dog-outfit3.png" alt="Bộ 3">
+                        <span class="lock-icon">🔒</span>
+                    </div>
+                    <p>Bộ Quý Phái (Lv 6)</p>
+                </div>
+
+                <!-- Bộ 4 (Lv 7) -->
+                <div id="outfitCard4" class="outfit-card locked" onclick="selectOutfit(4)">
+                    <div class="outfit-img-box">
+                        <img src="assets/images/dog-outfit4.png" alt="Bộ 4">
+                        <span class="lock-icon">🔒</span>
+                    </div>
+                    <p>Bộ Hoàng Gia (Lv 7)</p>
+                </div>
+
+                <!-- Bộ 5 (Lv 8) -->
+                <div id="outfitCard5" class="outfit-card locked" onclick="selectOutfit(5)">
+                    <div class="outfit-img-box">
+                        <img src="assets/images/dog-outfit5.png" alt="Bộ 5">
+                        <span class="lock-icon">🔒</span>
+                    </div>
+                    <p>Bộ Tinh Tế (Lv 8)</p>
+                </div>
+
+                <!-- Bộ 6 (Lv 9) -->
+                <div id="outfitCard6" class="outfit-card locked" onclick="selectOutfit(6)">
+                    <div class="outfit-img-box">
+                        <img src="assets/images/dog-outfit6.png" alt="Bộ 6">
+                        <span class="lock-icon">🔒</span>
+                    </div>
+                    <p>Bộ Lộng Lẫy (Lv 9)</p>
+                </div>
+
+                <!-- Bộ 7 (Lv 10) -->
+                <div id="outfitCard7" class="outfit-card locked" onclick="selectOutfit(7)">
+                    <div class="outfit-img-box">
+                        <img src="assets/images/dog-outfit7.png" alt="Bộ 7">
+                        <span class="lock-icon">🔒</span>
+                    </div>
+                    <p>Bộ Thần Thoại (Lv 10)</p>
+                </div>
+            </div>
+
+            <button class="btn" onclick="removeOutfit()" style="margin-top: 15px;">Mặc Đồ Mặc Định</button>
+        </div>
+    </div>
+

@@ -1,0 +1,57 @@
+    <!-- BÉ CÚN CHIHUAHUA + HỆ THỐNG NUÔI CÚN (GÓC DƯỚI BÊN PHẢI) -->
+    <div class="pet-widget">
+        <!-- Bảng chỉ số to bằng size thanh thời tiết (width: 220px) -->
+        <div class="pet-stats-card">
+            <!-- 1. ĐƯA TÍNH NĂNG ĐẶT TÊN LÊN ĐẦU BẢNG -->
+            <div class="pet-header-info">
+                <span id="petNameDisplay" class="pet-name pet-name-clickable" onclick="promptPetName()"
+                    title="Bấm vào đây để đổi tên cho cún">🐶 Đặt tên cún ✏️</span>
+                <span id="petLevelDisplay" class="pet-level">Lv.1</span>
+            </div>
+
+            <!-- 2. Thanh Level / XP -->
+            <div class="stat-bar-container" title="Kinh nghiệm">
+                <span class="bar-label">XP:</span>
+                <div class="bar-bg">
+                    <div id="xpBar" class="bar-fill xp-fill" style="width: 0%;"></div>
+                </div>
+            </div>
+
+            <!-- 3. Thanh Độ No -->
+            <div class="stat-bar-container" title="Độ no">
+                <span class="bar-label">🍖:</span>
+                <div class="bar-bg">
+                    <div id="fullnessBar" class="bar-fill fullness-fill" style="width: 80%;"></div>
+                </div>
+            </div>
+
+            <!-- 4. Thanh Độ Vui -->
+            <div class="stat-bar-container" title="Độ vui (Thanh cuối cùng)">
+                <span class="bar-label">❤️:</span>
+                <div class="bar-bg">
+                    <div id="happinessBar" class="bar-fill happiness-fill" style="width: 80%;"></div>
+                </div>
+            </div>
+
+            <!-- ❌ KHÔNG CÒN NÚT setNameBtn Ở BÊN DƯỚI NÀY NỮA -->
+        </div>
+        <!-- Khoảng trống cố định dành riêng cho hội thoại của cún -->
+        <div class="pet-bubble-slot">
+            <div id="petBubble" class="pet-bubble hidden">Gâu gâu! Chào Skey & Pâu! 🐶</div>
+        </div>
+
+        <!-- Avatar hình Cún kích thước to (220px) + Lớp Quần Áo đè lên -->
+        <div class="pet-avatar" onclick="petBark()" title="Chạm vào tớ đi!">
+            <img id="petImg" src="assets/images/dog-normal.png" alt="Chihuahua dễ thương">
+            <img id="petOutfitImg" class="pet-outfit-layer hidden" src="" alt="Trang phục cún">
+        </div>
+
+        <!-- Nút điều khiển Chăm sóc & Tủ đồ -->
+        <div class="pet-controls">
+            <button class="pet-btn" onclick="feedPet()">🦴 Cho ăn</button>
+            <button class="pet-btn" onclick="patPet()">🐾 Xoa đầu</button>
+            <button id="closetBtn" class="pet-btn closet-btn hidden" onclick="openCloset()" title="Tủ đồ">👗 Tủ
+                Đồ</button>
+        </div>
+    </div>
+

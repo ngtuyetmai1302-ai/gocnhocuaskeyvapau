@@ -4,17 +4,44 @@ const fs = require('node:fs');
 const vm = require('node:vm');
 const flush = () => new Promise(setImmediate);
 
+test('split page loads features in order and initializes the shared slideshow', () => {
+  const ui = dom(), intervals = [], timers = [];
+  ui.document.readyState = 'loading';
+  ui.document.documentElement = ui.make('html');
+  ui.document.body = ui.make('body');
+  const storage = new Map([['skey_pau_unlocked', 'true'], ['custom_photos', JSON.stringify(['a.jpg', 'b.jpg', 'c.jpg', 'd.jpg', 'e.jpg'])]]);
+  const localStorage = { getItem: key => storage.get(key) ?? null, setItem: (key, value) => storage.set(key, value) };
+  const context = vm.createContext({ document: ui.document, window: {}, localStorage, sessionStorage: localStorage,
+    console: { log() {}, warn() {}, error() {} }, fetch: async () => ({ json: async () => ({}) }),
+    setInterval(fn, delay) { intervals.push({ fn, delay }); }, setTimeout(fn) { timers.push(fn); }, clearTimeout() {}, clearInterval() {} });
+  const html = fs.readFileSync('public/index.html', 'utf8');
+  const scripts = [...html.matchAll(/<script src="(js\/[^"]+)"/g)].map(match => match[1]);
+  for (const file of scripts.filter(file => file !== 'js/watch-together.js')) {
+    vm.runInContext(fs.readFileSync(`public/${file}`, 'utf8'), context, { filename: file });
+  }
+  ui.handlers['document:DOMContentLoaded']();
+  assert(ui.make('passLockOverlay').classList.contains('unlocked'));
+  const slideshow = intervals.filter(timer => timer.delay === 120000);
+  assert.equal(slideshow.length, 1);
+  vm.runInContext("activePhotos = ['a.jpg', 'b.jpg', 'c.jpg', 'd.jpg', 'e.jpg']", context);
+  slideshow[0].fn(); timers.at(-1)();
+  assert.equal(ui.make('slideshowImg').src, 'b.jpg', 'slideshow uses the settings feature rather than the old duplicate function');
+  for (const name of ['openCardModal', 'openGameXOModal', 'openWordGameModal', 'feedPet', 'sendEnvelopeMessage', 'saveNewMemory', 'toggleMusic', 'selectUserRole']) {
+    assert.equal(typeof context[name], 'function', `${name} remains available to inline buttons`);
+  }
+});
+
 function dom() {
   const nodes = new Map(), handlers = {};
   const make = id => {
     if (nodes.has(id)) return nodes.get(id);
     const classes = new Set(['hidden']);
-    const node = { id, value: '', textContent: '', innerHTML: '', children: [], disabled: false, isConnected: true,
+    const node = { id, value: '', textContent: '', innerHTML: '', children: [], style: {}, disabled: false, isConnected: true,
       classList: { add: x => classes.add(x), remove: x => classes.delete(x), contains: x => classes.has(x), toggle(x, enabled) { enabled ? classes.add(x) : classes.delete(x); } },
       addEventListener(type, callback) { handlers[`${id}:${type}`] = callback; },
       appendChild(child) { this.children.push(child); },
       querySelector: selector => make(`${id}:${selector}`),
-      querySelectorAll: () => [], focus() {}, reset() {}, removeAttribute(key) { delete this[key]; }, getClientRects: () => [1]
+      querySelectorAll: () => [], focus() {}, reset() {}, setAttribute(key, value) { this[key] = value; }, removeAttribute(key) { delete this[key]; }, getClientRects: () => [1]
     };
     nodes.set(id, node); return node;
   };
