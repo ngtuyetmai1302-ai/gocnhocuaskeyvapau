@@ -541,10 +541,10 @@
                         <div class="icon-palette" id="p2IconPalette"></div>
                     </div>
 
-                    <!-- Khung Chat Trò Chuyện -->
+                    <!-- Khung Chat Trò Chuyện Chung -->
                     <div id="p2ChatBox" class="player-chat-box hidden">
                         <div class="selected-icon-display">
-                            Icon Pâu: <span id="p2SelectedIconDisplay" class="chosen-icon-symbol">--</span>
+                            💬 Chat chung của ván Caro
                         </div>
                         <div class="chat-messages-container" id="p2ChatMessages">
                             <div class="system-chat-msg">💬 Trò chuyện cùng nhau khi chơi</div>
@@ -606,14 +606,14 @@
 
             <!-- Bước 1: Chọn từ khởi đầu trước khi bắt đầu -->
             <div id="wordStartSetupCard" class="word-start-setup-card">
-                <div class="chain-label">📌 Nhập/Chọn cụm từ (2 tiếng) để khởi đầu ván chơi:</div>
+                <div id="wordStartLabel" class="chain-label">📌 Nhập/Chọn cụm từ (2 tiếng) để khởi đầu ván chơi:</div>
                 <div class="start-input-row">
                     <input type="text" id="startWordInput" placeholder="Ví dụ: Yêu thương, Bình yên..."
                         value="Yêu thương">
                     <button id="startWordGameBtn" class="btn start-game-btn" onclick="confirmStartWordGame()">Bắt Đầu
                         ⏱️</button>
                 </div>
-                <p class="word-rule-hint">💡 Khi bấm "Bắt Đầu ⏱️", đồng hồ 15 giây mới chính thức tính giờ!</p>
+                <p id="wordStartHint" class="word-rule-hint">💡 Khi bấm "Bắt Đầu ⏱️", đồng hồ 15 giây mới chính thức tính giờ!</p>
             </div>
 
             <!-- Khung Lượt chơi & Đồng hồ 15s (Ẩn khi chưa bấm Bắt đầu) -->
@@ -660,7 +660,7 @@
 
             <!-- Nút điều khiển -->
             <div class="game-control-btns" style="margin-top: 12px;">
-                <button class="btn control-btn" onclick="startWordGameRound()">🔄 Ván Mới</button>
+                <button class="btn control-btn" onclick="requestNewWordRound()">🔄 Ván Mới</button>
                 <button class="btn control-btn reset-score-btn" onclick="resetWordScore()">🗑️ Reset Tỷ Số</button>
                 <button class="btn control-btn history-btn" onclick="toggleWordHistory()">📜 Lịch Sử Đấu</button>
             </div>

@@ -138,17 +138,96 @@ function triggerFireworks() {
 // 1. ĐỒNG HỒ NGÀY GIỜ & HOA ĐỔI MÀU TƯƠNG TÁC
 // ==========================================
 const flowerList = ['🌸', '🌺', '🌻', '🌹', '🌷', '🌼', '🌿', '🍃', '💐', '🍀'];
-let leftFlowerIndex = 0;
-let rightFlowerIndex = 0;
+const CLOCK_ICON_STATE_PATH = 'clock_icon_state';
+let flowerIndex = 0;
+let flowerFloatTimer = null;
+let clockIconListenerAttached = false;
+let clockIconStateInitialized = false;
 
-function changeFlower(side) {
-    if (side === 'left') {
-        leftFlowerIndex = (leftFlowerIndex + 1) % flowerList.length;
-        document.getElementById('flowerLeft').innerText = flowerList[leftFlowerIndex];
-    } else {
-        rightFlowerIndex = (rightFlowerIndex + 1) % flowerList.length;
-        document.getElementById('flowerRight').innerText = flowerList[rightFlowerIndex];
+function showFloatingFlowerEffect(icon) {
+    let effectLayer = document.getElementById('floatingFlowerEffect');
+    if (!effectLayer) {
+        const slideshowArea = document.querySelector('.photo-wrapper');
+        if (!slideshowArea) return;
+
+        effectLayer = document.createElement('div');
+        effectLayer.id = 'floatingFlowerEffect';
+        effectLayer.className = 'floating-flower-effect';
+        slideshowArea.appendChild(effectLayer);
     }
+
+    effectLayer.replaceChildren();
+    if (flowerFloatTimer) clearTimeout(flowerFloatTimer);
+
+    // Mưa icon nhẹ trong khoảng 10 giây, mật độ vừa phải để không rối mắt.
+    for (let i = 0; i < 10; i++) {
+        const flower = document.createElement('span');
+        flower.className = 'floating-flower';
+        flower.innerText = icon;
+        flower.style.left = `${4 + Math.random() * 92}%`;
+        flower.style.setProperty('--rain-drift', `${-18 + Math.random() * 36}px`);
+        flower.style.setProperty('--rain-rotate', `${-22 + Math.random() * 44}deg`);
+        flower.style.animationDelay = `${i * 0.65}s`;
+        effectLayer.appendChild(flower);
+    }
+
+    flowerFloatTimer = setTimeout(() => {
+        effectLayer?.remove();
+        flowerFloatTimer = null;
+    }, 10000);
+}
+
+function applyClockIcon(index, playEffect = false) {
+    if (!Number.isInteger(index) || index < 0 || index >= flowerList.length) return;
+
+    flowerIndex = index;
+    const selectedFlower = flowerList[index];
+
+    const leftFlower = document.getElementById('flowerLeft');
+    const rightFlower = document.getElementById('flowerRight');
+    if (leftFlower) leftFlower.innerText = selectedFlower;
+    if (rightFlower) rightFlower.innerText = selectedFlower;
+
+    if (playEffect) showFloatingFlowerEffect(selectedFlower);
+}
+
+function syncClockIconState() {
+    if (typeof database === 'undefined' || !database) return;
+
+    database.ref(CLOCK_ICON_STATE_PATH).set({
+        iconIndex: flowerIndex,
+        updatedAt: Date.now(),
+        updatedBy: sessionStorage.getItem('active_user_role') || 'unknown'
+    }).catch(error => {
+        console.error('Không thể đồng bộ icon đồng hồ:', error);
+    });
+}
+
+function listenForRealtimeClockIcon() {
+    if (clockIconListenerAttached || typeof database === 'undefined' || !database) return;
+    clockIconListenerAttached = true;
+
+    database.ref(CLOCK_ICON_STATE_PATH).on('value', (snapshot) => {
+        const state = snapshot.val();
+        if (!state) {
+            syncClockIconState();
+            clockIconStateInitialized = true;
+            return;
+        }
+
+        const remoteIndex = Number(state.iconIndex);
+        if (Number.isInteger(remoteIndex) && remoteIndex >= 0 && remoteIndex < flowerList.length && remoteIndex !== flowerIndex) {
+            // Khi người kia đổi icon, cập nhật cả icon lẫn hiệu ứng mưa ở máy này.
+            applyClockIcon(remoteIndex, clockIconStateInitialized);
+        }
+        clockIconStateInitialized = true;
+    });
+}
+
+function changeFlower() {
+    const nextIndex = (flowerIndex + 1) % flowerList.length;
+    applyClockIcon(nextIndex, true);
+    syncClockIconState();
 }
 
 function updateLiveClock() {
@@ -1410,6 +1489,8 @@ function removeOutfit() {
 // ==========================================
 const availableIcons = ['🌸', '🌺', '🌻', '🌹', '🐶', '🐱', '🐰', '🦊', '🍓', '🍀', '❤️', '💚'];
 const XO_GAME_PATH = 'xo_game';
+const XO_REACTION_DURATION_MS = 8000;
+const XO_REACTION_EMOJIS = new Set(['❤️', '💖', '😂', '😭', '👏', '🎉', '🔥', '💩', '🌸', '💣', '🌟', '👻', '🥰', '🥳', '😜', '💪']);
 
 let p1Icon = null;
 let p2Icon = null;
@@ -1423,6 +1504,8 @@ let xoGameListener = null;
 let xoJoinedRole = '';
 let xoProcessedFinishedGameId = '';
 let xoDismissedNoticeId = '';
+let xoStartRecoveryGameId = '';
+let xoSeenReactionIds = new Set();
 
 function createXOBoard() {
     return Array(10).fill(null).map(() => Array(10).fill(null));
@@ -1476,6 +1559,37 @@ function hasBothXOPlayers(game) {
     return Boolean(game?.players?.Skey && game?.players?.Pâu);
 }
 
+function hasBothXOIcons(game) {
+    return Boolean(game?.icons?.Skey && game?.icons?.Pâu);
+}
+
+function startXOGameWhenReady(game) {
+    if (!hasBothXOPlayers(game) || !hasBothXOIcons(game)) return false;
+
+    game.phase = 'playing';
+    game.currentPlayer = getXOStartingPlayer(game.roundNumber);
+    game.startedAt = Date.now();
+    return true;
+}
+
+function recoverStalledXOGame(game) {
+    if (!game || !hasBothXOPlayers(game) || !hasBothXOIcons(game)) return;
+    if (game.phase !== 'waiting' && game.phase !== 'selecting') return;
+    if (xoStartRecoveryGameId === game.gameId || typeof database === 'undefined' || !database) return;
+
+    xoStartRecoveryGameId = game.gameId;
+    database.ref(XO_GAME_PATH).transaction((currentGame) => {
+        const current = normalizeXOGame(currentGame);
+        if ((current.phase === 'waiting' || current.phase === 'selecting') && hasBothXOPlayers(current) && hasBothXOIcons(current)) {
+            startXOGameWhenReady(current);
+        }
+        return current;
+    }).catch((error) => {
+        xoStartRecoveryGameId = '';
+        console.error('Không thể khởi động lại ván Caro đang chờ:', error);
+    });
+}
+
 function normalizeXORematchResponses(responses) {
     return {
         Skey: typeof responses?.Skey === 'boolean' ? responses.Skey : null,
@@ -1493,6 +1607,8 @@ function normalizeXOGame(game) {
     state.board = normalizeXOBoard(state.board);
     state.lastMove = normalizeXOLastMove(state.lastMove);
     state.history = state.history && typeof state.history === 'object' ? state.history : {};
+    state.chat = state.chat && typeof state.chat === 'object' ? state.chat : {};
+    state.reactions = state.reactions && typeof state.reactions === 'object' ? state.reactions : {};
     state.rematchResponses = normalizeXORematchResponses(state.rematchResponses);
     state.roundNumber = Number(state.roundNumber) || 1;
     state.phase = state.phase || 'waiting';
@@ -1510,6 +1626,8 @@ function resetXOGameState(state, keepIcons = false) {
     state.winningCells = [];
     state.winner = '';
     state.rematchResponses = { Skey: null, Pâu: null };
+    state.chat = {};
+    state.reactions = {};
     delete state.matchEndedAt;
     delete state.finishedAt;
     delete state.endReason;
@@ -1587,7 +1705,9 @@ function joinXOGame(role) {
         if (!hasBothXOPlayers(game)) {
             game.phase = 'waiting';
         } else if (!hadBothPlayers || game.phase === 'waiting') {
-            resetXOGameState(game, false);
+            if (!startXOGameWhenReady(game)) {
+                resetXOGameState(game, false);
+            }
         }
 
         return game;
@@ -1635,27 +1755,37 @@ function syncXOGameUI(game) {
     xoCurrentPlayer = xoGameState?.currentPlayer === 'Pâu' ? 2 : 1;
     xoGameOver = ['finished', 'ended', 'cancelled'].includes(xoGameState?.phase);
 
-    document.getElementById('scoreP1Val').innerText = p1Score;
-    document.getElementById('scoreP2Val').innerText = p2Score;
-    document.getElementById('scoreP1Icon').innerText = p1Icon || '👤';
-    document.getElementById('scoreP2Icon').innerText = p2Icon || '👤';
-    document.getElementById('p1SelectedIconDisplay').innerText = p1Icon || '--';
-    document.getElementById('p2SelectedIconDisplay').innerText = p2Icon || '--';
+    const setXOText = (id, text) => {
+        const element = document.getElementById(id);
+        if (element) element.innerText = text;
+    };
+    setXOText('scoreP1Val', p1Score);
+    setXOText('scoreP2Val', p2Score);
+    setXOText('scoreP1Icon', p1Icon || '👤');
+    setXOText('scoreP2Icon', p2Icon || '👤');
+    setXOText('p1SelectedIconDisplay', p1Icon || '--');
+    setXOText('p2SelectedIconDisplay', p2Icon || '--');
 
     const p1SelectBox = document.getElementById('p1IconSelectBox');
     const p1ReactionBox = document.getElementById('p1ReactionBox');
     const p2SelectBox = document.getElementById('p2IconSelectBox');
     const p2ChatBox = document.getElementById('p2ChatBox');
+    const canUseXOExtras = hasBothXOIcons(xoGameState) && ['playing', 'finished'].includes(xoGameState?.phase);
     if (p1SelectBox) p1SelectBox.classList.toggle('hidden', Boolean(p1Icon));
-    if (p1ReactionBox) p1ReactionBox.classList.toggle('hidden', !p1Icon);
+    if (p1ReactionBox) p1ReactionBox.classList.toggle('hidden', !canUseXOExtras);
     if (p2SelectBox) p2SelectBox.classList.toggle('hidden', Boolean(p2Icon));
-    if (p2ChatBox) p2ChatBox.classList.toggle('hidden', !p2Icon);
+    if (p2ChatBox) p2ChatBox.classList.toggle('hidden', !canUseXOExtras);
 
     initXOPalettes();
     renderXOBoard();
     updateXOTurnStatus();
     renderXOHistory();
+    renderXOChat();
+    syncXOReactions(xoGameState);
     syncXORematchModal();
+
+    // Khắc phục trạng thái phòng cũ bị kẹt ở "đang chọn" dù cả hai đã chọn icon.
+    recoverStalledXOGame(xoGameState);
 
     if (isXOActivePhase(xoGameState?.phase) && !hasBothXOPlayers(xoGameState)) {
         cancelXOGameForDeparture('', true);
@@ -1813,7 +1943,7 @@ function chooseXOIcon(role, icon) {
         alert(`Chỉ ${role} mới có thể chọn icon này nhé!`);
         return;
     }
-    if (!hasBothXOPlayers(xoGameState) || xoGameState?.phase !== 'selecting') {
+    if (!hasBothXOPlayers(xoGameState) || (xoGameState?.phase !== 'selecting' && xoGameState?.phase !== 'waiting')) {
         alert('Hãy chờ cả Skey và Pâu cùng vào phòng Caro trước nhé!');
         return;
     }
@@ -1825,14 +1955,10 @@ function chooseXOIcon(role, icon) {
     database.ref(XO_GAME_PATH).transaction((currentGame) => {
         const game = normalizeXOGame(currentGame);
         const otherRole = role === 'Skey' ? 'Pâu' : 'Skey';
-        if (!hasBothXOPlayers(game) || game.phase !== 'selecting' || game.icons[otherRole] === icon) return game;
+        if (!hasBothXOPlayers(game) || (game.phase !== 'selecting' && game.phase !== 'waiting') || game.icons[otherRole] === icon) return game;
 
         game.icons[role] = icon;
-        if (game.icons.Skey && game.icons.Pâu) {
-            game.phase = 'playing';
-            game.currentPlayer = getXOStartingPlayer(game.roundNumber);
-            game.startedAt = Date.now();
-        }
+        startXOGameWhenReady(game);
         return game;
     }).catch((error) => {
         console.error('Không thể chọn icon Caro:', error);
@@ -1904,6 +2030,7 @@ function handleXOCellClick(r, c) {
             game.scores[role] = (Number(game.scores[role]) || 0) + 1;
             game.finishedAt = Date.now();
             game.rematchResponses = { Skey: null, Pâu: null };
+            saveXOHistoryToGame(game);
         } else if (game.board.every(row => row.every(value => value !== null))) {
             game.phase = 'finished';
             game.winner = 'Hòa cờ';
@@ -2003,6 +2130,11 @@ function resetXOGame(reselectIcons = false) {
         return;
     }
 
+    if (xoGameState?.phase === 'playing') {
+        alert('Ván Caro đang diễn ra. Hãy chơi xong ván này trước khi tạo ván mới hoặc đổi icon nhé!');
+        return;
+    }
+
     if (xoGameState?.phase === 'finished' && (xoGameState.winner === 'Skey' || xoGameState.winner === 'Pâu')) {
         alert('Hãy để cả Skey và Pâu trả lời trong bảng hỏi chơi lại trước nhé!');
         return;
@@ -2024,6 +2156,11 @@ function resetXOGame(reselectIcons = false) {
 function resetXOScore() {
     if (!hasBothXOPlayers(xoGameState)) {
         alert('Cần có cả Skey và Pâu trong phòng để reset tỷ số nhé!');
+        return;
+    }
+
+    if (xoGameState?.phase === 'playing') {
+        alert('Không thể reset tỷ số khi ván Caro đang diễn ra nhé!');
         return;
     }
 
@@ -2089,7 +2226,7 @@ function toggleXOHistory() {
     if (historyBox) historyBox.classList.toggle('hidden');
 }
 
-function spawnGameFloatingEmoji(emoji) {
+function playGameFloatingEmoji(emoji) {
     const modalContent = document.querySelector('.game-xo-modal-content');
     if (!modalContent) return;
 
@@ -2102,41 +2239,113 @@ function spawnGameFloatingEmoji(emoji) {
     setTimeout(() => { elem.remove(); }, 2500);
 }
 
+function syncXOReactions(game) {
+    const now = Date.now();
+    const reactions = Object.entries(game?.reactions || {})
+        .map(([id, reaction]) => ({ id, ...reaction }))
+        .filter(reaction => XO_REACTION_EMOJIS.has(reaction.emoji) && now - Number(reaction.createdAt) <= XO_REACTION_DURATION_MS)
+        .sort((a, b) => Number(a.createdAt) - Number(b.createdAt));
+
+    reactions.forEach(reaction => {
+        if (xoSeenReactionIds.has(reaction.id)) return;
+        xoSeenReactionIds.add(reaction.id);
+        playGameFloatingEmoji(reaction.emoji);
+    });
+
+    // Chỉ giữ mã sự kiện mới để bộ nhớ không tăng theo thời gian.
+    const activeIds = new Set(reactions.map(reaction => reaction.id));
+    xoSeenReactionIds = new Set([...xoSeenReactionIds].filter(id => activeIds.has(id)));
+}
+
+function spawnGameFloatingEmoji(emoji) {
+    const role = getXORole();
+    if (!role || !hasBothXOIcons(xoGameState) || !['playing', 'finished'].includes(xoGameState?.phase) ||
+        !XO_REACTION_EMOJIS.has(emoji) || typeof database === 'undefined' || !database) return;
+
+    const reactionRef = database.ref(`${XO_GAME_PATH}/reactions`).push();
+    reactionRef.set({ emoji, sender: role, createdAt: Date.now() }).then(() => {
+        // Sự kiện chỉ có giá trị tức thời; tự dọn sau khi cả hai đã thấy hiệu ứng.
+        setTimeout(() => reactionRef.remove().catch(() => {}), XO_REACTION_DURATION_MS);
+    }).catch(error => {
+        console.error('Không thể đồng bộ cảm xúc Caro:', error);
+    });
+}
+
 function sendP2Chat() {
     const input = document.getElementById('p2InputMsg');
     const msg = input ? input.value.trim() : '';
-    if (!msg) return;
+    const role = getXORole();
+    if (!msg || !role || typeof database === 'undefined' || !database) return;
 
-    appendGameChatMessage('Pâu', p2Icon || '👤', msg);
-    if (input) input.value = '';
+    database.ref(XO_GAME_PATH).transaction((currentGame) => {
+        const game = normalizeXOGame(currentGame);
+        if (!hasBothXOPlayers(game) || !hasBothXOIcons(game) || !['playing', 'finished'].includes(game.phase)) return game;
+
+        const chatId = `chat_${Date.now()}_${Math.random().toString(36).slice(2, 8)}`;
+        game.chat[chatId] = {
+            sender: role,
+            icon: game.icons?.[role] || '👤',
+            text: msg.slice(0, 300),
+            sentAt: Date.now()
+        };
+
+        const chatEntries = Object.entries(game.chat).sort(([, a], [, b]) => Number(a.sentAt) - Number(b.sentAt));
+        while (chatEntries.length > 50) {
+            const [oldestId] = chatEntries.shift();
+            delete game.chat[oldestId];
+        }
+        return game;
+    }).then(() => {
+        if (input) input.value = '';
+    }).catch(error => {
+        console.error('Không thể gửi chat Caro:', error);
+    });
 }
 
 function handleP2ChatEnter(e) {
     if (e.key === 'Enter') sendP2Chat();
 }
 
-function appendGameChatMessage(sender, icon, msg) {
-    const p2Container = document.getElementById('p2ChatMessages');
-    const bubbleHtml = `<div class="chat-bubble-item p2-bubble"><strong>${icon} ${sender}:</strong> ${msg}</div>`;
+function renderXOChat() {
+    const container = document.getElementById('p2ChatMessages');
+    if (!container) return;
 
-    if (p2Container) {
-        p2Container.insertAdjacentHTML('beforeend', bubbleHtml);
-        p2Container.scrollTop = p2Container.scrollHeight;
+    const messages = Object.values(xoGameState?.chat || {})
+        .filter(message => message && typeof message.text === 'string')
+        .sort((a, b) => Number(a.sentAt) - Number(b.sentAt));
+    container.innerHTML = '';
+
+    if (messages.length === 0) {
+        const hint = document.createElement('div');
+        hint.className = 'system-chat-msg';
+        hint.innerText = '💬 Trò chuyện cùng nhau trong ván Caro này';
+        container.appendChild(hint);
+    } else {
+        messages.forEach(message => {
+            const bubble = document.createElement('div');
+            bubble.className = `chat-bubble-item ${message.sender === 'Skey' ? 'p1-bubble' : 'p2-bubble'}`;
+            const sender = document.createElement('strong');
+            sender.innerText = `${message.icon || '👤'} ${message.sender || 'Người chơi'}: `;
+            bubble.append(sender, document.createTextNode(message.text));
+            container.appendChild(bubble);
+        });
     }
+
+    container.scrollTop = container.scrollHeight;
 }
 
 // ==========================================
 // 11. GAME NỐI TỪ (15S - KHỞI ĐẦU RỒI MỚI ĐẾM GIỜ)
 // ==========================================
-let wordCurrentPlayer = 1;
-let wordP1Score = 0;
-let wordP2Score = 0;
-let wordTimerVal = 15;
+// Đặt Nối từ bên trong nhánh Caro đã có quyền Firebase trên bản web đang chạy,
+// tránh việc phòng chơi bị kẹt nếu rules cho nhánh mới chưa được deploy.
+const WORD_GAME_PATH = 'xo_game/word_game';
+const WORD_TURN_DURATION_MS = 15000;
+let wordGameState = null;
+let wordGameListener = null;
+let wordJoinedRole = '';
 let wordTimerInterval = null;
-let lastSyllableRequired = "";
-let lastWordPhrase = "";
-let usedWordsInRound = [];
-let isWordRoundActive = false;
+let wordProcessedFinishedGameId = '';
 
 const vietnameseWordDict = new Set([
     "yêu thương", "thương nhớ", "nhớ nhung", "nhung nhớ", "ngọt ngào", "ngào ngạt", "ngạt thở",
@@ -2155,184 +2364,320 @@ const vietnameseWordDict = new Set([
     "mỏi mệt", "mệt mỏi", "mỏi mắt", "mắt xích", "xích đu", "đu quay", "quay quắt", "quắt queo"
 ]);
 
+function getWordRole() {
+    const role = sessionStorage.getItem('active_user_role') || '';
+    return role === 'Skey' || role === 'Pâu' ? role : '';
+}
+
+function getOtherWordPlayer(role) {
+    return role === 'Skey' ? 'Pâu' : 'Skey';
+}
+
+function hasBothWordPlayers(game) {
+    return Boolean(game?.players?.Skey && game?.players?.Pâu);
+}
+
+function getWordStarter(roundNumber) {
+    return Number(roundNumber) % 2 === 0 ? 'Pâu' : 'Skey';
+}
+
+function normalizeWordGame(game) {
+    const state = game || {};
+    state.players = state.players && typeof state.players === 'object' ? state.players : {};
+    state.scores = state.scores && typeof state.scores === 'object' ? state.scores : { Skey: 0, Pâu: 0 };
+    state.scores.Skey = Number(state.scores.Skey) || 0;
+    state.scores.Pâu = Number(state.scores.Pâu) || 0;
+    state.chain = state.chain && typeof state.chain === 'object' ? state.chain : {};
+    state.history = state.history && typeof state.history === 'object' ? state.history : {};
+    state.roundNumber = Math.max(1, Number(state.roundNumber) || 1);
+    state.starter = state.starter === 'Pâu' ? 'Pâu' : 'Skey';
+    state.currentPlayer = state.currentPlayer === 'Pâu' ? 'Pâu' : 'Skey';
+    state.phase = state.phase || 'waiting';
+    state.gameId = state.gameId || `word_${Date.now()}`;
+    return state;
+}
+
+function getWordChainEntries(game = wordGameState) {
+    return Object.entries(game?.chain || {})
+        .map(([id, entry]) => ({ id, ...entry }))
+        .filter(entry => entry && typeof entry.text === 'string')
+        .sort((a, b) => Number(a.sentAt) - Number(b.sentAt));
+}
+
+function prepareWordRound(game, incrementRound = false) {
+    if (incrementRound) game.roundNumber = (Number(game.roundNumber) || 1) + 1;
+    game.starter = getWordStarter(game.roundNumber);
+    game.currentPlayer = game.starter;
+    game.phase = 'setup';
+    game.chain = {};
+    game.turnStartedAt = 0;
+    game.result = null;
+    game.gameId = `word_${Date.now()}`;
+}
+
 function openWordGameModal() {
     const modal = document.getElementById('gameWordModal');
     if (modal) modal.classList.remove('hidden');
     updateGameInviteButton('word');
-    renderWordHistory();
-    if (!isWordRoundActive) {
-        startWordGameRound();
+
+    const role = getWordRole();
+    if (!role || typeof database === 'undefined' || !database) {
+        alert('Hãy chọn vai Skey hoặc Pâu và kết nối Firebase trước khi vào game Nối từ nhé!');
+        closeWordGameModal();
+        return;
     }
+    joinWordGame(role);
 }
 
 function closeWordGameModal() {
     const modal = document.getElementById('gameWordModal');
     if (modal) modal.classList.add('hidden');
     stopWordTimer();
+    leaveWordGame();
 }
 
-function startWordGameRound() {
-    stopWordTimer();
-    isWordRoundActive = false;
-    wordCurrentPlayer = 1;
-    usedWordsInRound = [];
-    lastWordPhrase = "";
-    lastSyllableRequired = "";
+function joinWordGame(role) {
+    wordJoinedRole = role;
+    const gameRef = database.ref(WORD_GAME_PATH);
+    const playerRef = gameRef.child(`players/${role}`);
+    playerRef.onDisconnect().remove();
+    listenForWordGame();
 
+    gameRef.transaction((currentGame) => {
+        const game = normalizeWordGame(currentGame);
+        const hadBothPlayers = hasBothWordPlayers(game);
+        game.players[role] = { joinedAt: Date.now() };
+
+        if (!hasBothWordPlayers(game)) {
+            game.phase = 'waiting';
+        } else if (!hadBothPlayers || game.phase === 'waiting') {
+            prepareWordRound(game);
+        }
+        return game;
+    }).catch(error => {
+        console.error('Không thể vào phòng Nối từ:', error);
+        alert('Chưa thể vào phòng Nối từ. Bạn hãy kiểm tra kết nối Firebase rồi thử lại nhé!');
+    });
+}
+
+function leaveWordGame() {
+    if (!wordJoinedRole || typeof database === 'undefined' || !database) return;
+
+    const playerRef = database.ref(`${WORD_GAME_PATH}/players/${wordJoinedRole}`);
+    playerRef.onDisconnect().cancel();
+    playerRef.remove().catch(error => console.error('Không thể rời phòng Nối từ:', error));
+    wordJoinedRole = '';
+    if (wordGameListener) {
+        database.ref(WORD_GAME_PATH).off('value', wordGameListener);
+        wordGameListener = null;
+    }
+}
+
+function listenForWordGame() {
+    if (wordGameListener) return;
+    wordGameListener = snapshot => syncWordGameUI(snapshot.val());
+    database.ref(WORD_GAME_PATH).on('value', wordGameListener);
+}
+
+function syncWordGameUI(game) {
+    wordGameState = game ? normalizeWordGame(game) : null;
+    const state = wordGameState;
+    const setText = (id, text) => {
+        const element = document.getElementById(id);
+        if (element) element.innerText = text;
+    };
+    setText('wordP1Score', state?.scores?.Skey || 0);
+    setText('wordP2Score', state?.scores?.Pâu || 0);
+
+    const bothPlayers = hasBothWordPlayers(state);
+    const role = getWordRole();
+    const isStarter = role === state?.starter;
+    const isSetup = state?.phase === 'setup';
+    const canSetOpeningPhrase = bothPlayers && isStarter && ['setup', 'waiting'].includes(state?.phase);
+    const showSetup = !['playing', 'finished'].includes(state?.phase);
+    const isActiveOrFinished = bothPlayers && ['playing', 'finished'].includes(state?.phase);
     const setupCard = document.getElementById('wordStartSetupCard');
     const activeArea = document.getElementById('wordActiveGameArea');
-    if (setupCard) setupCard.classList.remove('hidden');
-    if (activeArea) activeArea.classList.add('hidden');
+    const startInput = document.getElementById('startWordInput');
+    const startButton = document.getElementById('startWordGameBtn');
+    if (setupCard) setupCard.classList.toggle('hidden', !showSetup);
+    if (activeArea) activeArea.classList.toggle('hidden', !isActiveOrFinished);
+    if (startInput) startInput.disabled = !canSetOpeningPhrase;
+    if (startButton) startButton.disabled = !canSetOpeningPhrase;
 
-    const chainList = document.getElementById('wordChainList');
-    if (chainList) {
-        chainList.innerHTML = '<div class="empty-chain-hint">Ván đấu chưa bắt đầu. Nhập từ mở đầu và bấm Bắt Đầu!</div>';
+    setText('wordStartLabel', !bothPlayers
+        ? '⏳ Đang chờ người kia vào phòng Nối từ...'
+        : canSetOpeningPhrase ? `📌 ${role}, hãy nhập cụm từ mở đầu gồm 2 tiếng:` : `⏳ Đang chờ ${state?.starter} chọn cụm từ mở đầu...`);
+    setText('wordStartHint', isStarter
+        ? '💡 Bấm “Bắt Đầu” để cả hai cùng dùng chung đồng hồ 15 giây.'
+        : '💡 Người mở đầu luân phiên theo từng ván để công bằng.');
+
+    const entries = getWordChainEntries(state);
+    const lastEntry = entries[entries.length - 1];
+    if (lastEntry) {
+        const lastWords = lastEntry.text.trim().split(/\s+/);
+        setText('lastWordDisplay', `“${lastEntry.text}”`);
+        setText('requiredSyllableTag', (lastWords[1] || '--').toUpperCase());
     }
-    
-    hideWordError();
+    renderWordChain(entries);
     updateWordTurnDisplay();
+
+    const wordInput = document.getElementById('wordInput');
+    const canSubmit = state?.phase === 'playing' && state.currentPlayer === role;
+    if (wordInput) wordInput.disabled = !canSubmit;
+    const submitButton = document.querySelector('.word-submit-btn');
+    if (submitButton) submitButton.disabled = !canSubmit;
+
+    if (state?.phase === 'finished' && state.result) {
+        showWordError(state.result.message || 'Ván Nối từ đã kết thúc.');
+    } else {
+        hideWordError();
+    }
+
+    renderWordHistory();
+    if (state?.phase === 'finished' && state.gameId !== wordProcessedFinishedGameId) {
+        wordProcessedFinishedGameId = state.gameId;
+        triggerFireworks();
+    }
+    if (state?.phase === 'playing' && bothPlayers) startWordTimer();
+    else stopWordTimer();
 }
 
 function confirmStartWordGame() {
-    const startInput = document.getElementById('startWordInput');
-    const rawVal = startInput ? startInput.value.trim() : '';
-
-    if (!rawVal) {
-        alert("Vui lòng nhập cụm từ mở đầu (2 tiếng)!");
+    const input = document.getElementById('startWordInput');
+    const rawPhrase = input ? input.value.trim() : '';
+    const role = getWordRole();
+    const normalized = validateWordPhrase(rawPhrase);
+    if (!normalized.valid) {
+        showWordError(normalized.message);
         return;
     }
 
-    const words = rawVal.split(/\s+/);
-    if (words.length !== 2) {
-        alert("Bắt buộc phải nhập ĐÚNG 2 TỪ (2 tiếng) để mở đầu!");
-        return;
-    }
+    database.ref(WORD_GAME_PATH).transaction((currentGame) => {
+        const game = normalizeWordGame(currentGame);
+        if (!hasBothWordPlayers(game)) return;
+        if (game.phase === 'waiting') prepareWordRound(game);
+        if (game.phase !== 'setup' || game.starter !== role) return;
 
-    const firstWord = words[0].toLowerCase();
-    const secondWord = words[1].toLowerCase();
-    const fullPhraseLower = `${firstWord} ${secondWord}`;
-
-    usedWordsInRound = [fullPhraseLower];
-    lastSyllableRequired = secondWord;
-    lastWordPhrase = rawVal;
-
-    document.getElementById('lastWordDisplay').innerText = `"${rawVal}"`;
-    document.getElementById('requiredSyllableTag').innerText = secondWord.toUpperCase();
-
-    // Ẩn setup card, hiện active game area
-    document.getElementById('wordStartSetupCard').classList.add('hidden');
-    document.getElementById('wordActiveGameArea').classList.remove('hidden');
-
-    addWordChipToChain(rawVal, 1);
-
-    // Chuyển lượt sang Pâu (Player 2)
-    wordCurrentPlayer = 2;
-    isWordRoundActive = true;
-    updateWordTurnDisplay();
-    resetWordTimer();
+        const moveId = `start_${Date.now()}_${role}`;
+        game.chain[moveId] = { text: normalized.displayText, normalizedText: normalized.fullPhrase, sender: role, sentAt: Date.now() };
+        game.phase = 'playing';
+        game.currentPlayer = getOtherWordPlayer(role);
+        game.turnStartedAt = Date.now();
+        return game;
+    }).catch(error => console.error('Không thể bắt đầu ván Nối từ:', error));
 }
 
-function resetWordTimer() {
-    stopWordTimer();
-    wordTimerVal = 15;
+function validateWordPhrase(rawPhrase) {
+    const words = String(rawPhrase || '').trim().split(/\s+/).filter(Boolean);
+    if (words.length !== 2) return { valid: false, message: '❌ Hãy nhập đúng 2 tiếng, ví dụ: “Thương nhớ”.' };
+
+    const firstWord = words[0].toLocaleLowerCase('vi-VN');
+    const secondWord = words[1].toLocaleLowerCase('vi-VN');
+    const fullPhrase = `${firstWord} ${secondWord}`;
+    if (!checkVietnameseWordValidity(firstWord, secondWord, fullPhrase)) {
+        return { valid: false, message: `❌ “${rawPhrase}” không hợp lệ.` };
+    }
+    return { valid: true, firstWord, secondWord, fullPhrase, displayText: words.join(' ') };
+}
+
+function startWordTimer() {
+    if (wordTimerInterval) return;
     updateWordTimerUI();
-
-    wordTimerInterval = setInterval(() => {
-        wordTimerVal--;
-        updateWordTimerUI();
-
-        if (wordTimerVal <= 0) {
-            stopWordTimer();
-            handleWordTimeOut();
-        }
-    }, 1000);
+    wordTimerInterval = setInterval(updateWordTimerUI, 250);
 }
 
 function stopWordTimer() {
-    if (wordTimerInterval) {
-        clearInterval(wordTimerInterval);
-        wordTimerInterval = null;
-    }
+    if (!wordTimerInterval) return;
+    clearInterval(wordTimerInterval);
+    wordTimerInterval = null;
 }
 
 function updateWordTimerUI() {
+    const state = wordGameState;
+    if (!state?.turnStartedAt || state.phase !== 'playing') return;
+
+    const remainingMs = Math.max(0, WORD_TURN_DURATION_MS - (Date.now() - Number(state.turnStartedAt)));
+    const seconds = Math.ceil(remainingMs / 1000);
     const timerNum = document.getElementById('wordTimerNum');
     const timerBar = document.getElementById('wordTimerBar');
-
-    if (timerNum) timerNum.innerText = wordTimerVal;
-    if (timerBar) {
-        const percent = Math.max(0, (wordTimerVal / 15) * 100);
-        timerBar.style.width = `${percent}%`;
-    }
+    if (timerNum) timerNum.innerText = seconds;
+    if (timerBar) timerBar.style.width = `${(remainingMs / WORD_TURN_DURATION_MS) * 100}%`;
+    if (remainingMs <= 0) resolveWordTimeout();
 }
 
 function updateWordTurnDisplay() {
-    const turnTitle = document.getElementById('wordTurnTitle');
-    const curName = wordCurrentPlayer === 1 ? "Skey" : "Pâu";
-    const curIcon = wordCurrentPlayer === 1 ? "👦" : "👧";
-
-    if (turnTitle) {
-        turnTitle.innerText = `🎮 Lượt chơi: ${curName} (${curIcon})`;
+    const title = document.getElementById('wordTurnTitle');
+    if (!title) return;
+    if (!hasBothWordPlayers(wordGameState)) {
+        title.innerText = '⏳ Đang chờ người kia vào phòng Nối từ...';
+    } else if (wordGameState?.phase === 'playing') {
+        const icon = wordGameState.currentPlayer === 'Skey' ? '👦' : '👧';
+        title.innerText = `🎮 Lượt chơi: ${wordGameState.currentPlayer} (${icon})`;
+    } else if (wordGameState?.phase === 'finished') {
+        title.innerText = wordGameState.result?.message || '🏁 Ván Nối từ đã kết thúc.';
+    } else {
+        title.innerText = `📌 Chờ ${wordGameState?.starter || 'Skey'} mở đầu ván ${wordGameState?.roundNumber || 1}.`;
     }
 }
 
-function handleWordInputEnter(e) {
-    if (e.key === 'Enter') submitWordChain();
+function handleWordInputEnter(event) {
+    if (event.key === 'Enter') {
+        event.preventDefault();
+        submitWordChain();
+    }
 }
 
 function submitWordChain() {
-    if (!isWordRoundActive) return;
-
-    const inputElem = document.getElementById('wordInput');
-    const rawInput = inputElem ? inputElem.value.trim() : '';
-    hideWordError();
-
-    if (!rawInput) {
-        showWordError("⚠️ Bạn chưa nhập từ nào cả!");
+    const input = document.getElementById('wordInput');
+    const rawPhrase = input ? input.value.trim() : '';
+    const role = getWordRole();
+    if (!hasBothWordPlayers(wordGameState) || wordGameState?.phase !== 'playing' || wordGameState.currentPlayer !== role) {
+        showWordError('⏳ Chưa đến lượt bạn hoặc ván chơi chưa bắt đầu.');
+        return;
+    }
+    const validated = validateWordPhrase(rawPhrase);
+    if (!rawPhrase) {
+        showWordError('⚠️ Bạn chưa nhập cụm từ nào cả!');
+        return;
+    }
+    if (!validated.valid) {
+        finishWordGameForInvalidPhrase(rawPhrase);
+        if (input) input.value = '';
         return;
     }
 
-    const words = rawInput.split(/\s+/);
-
-    if (words.length !== 2) {
-        showWordError("❌ Lỗi: Bắt buộc phải nhập ĐÚNG 2 TỪ (2 tiếng)! VD: 'Thương nhớ', 'Nhớ nhung'.");
+    const localEntries = getWordChainEntries();
+    const previousWords = localEntries[localEntries.length - 1]?.text?.trim().split(/\s+/) || [];
+    const requiredSyllable = (previousWords[1] || '').toLocaleLowerCase('vi-VN');
+    if (validated.firstWord !== requiredSyllable) {
+        showWordError(`❌ Từ mới phải bắt đầu bằng tiếng “${requiredSyllable.toUpperCase()}”.`);
+        return;
+    }
+    if (localEntries.some(entry => entry.normalizedText === validated.fullPhrase)) {
+        showWordError(`❌ Cụm từ “${validated.displayText}” đã được dùng trong ván này.`);
         return;
     }
 
-    const firstWord = words[0].toLowerCase();
-    const secondWord = words[1].toLowerCase();
-    const fullPhraseLower = `${firstWord} ${secondWord}`;
+    database.ref(WORD_GAME_PATH).transaction((currentGame) => {
+        const game = normalizeWordGame(currentGame);
+        if (!hasBothWordPlayers(game) || game.phase !== 'playing' || game.currentPlayer !== role) return;
 
-    if (lastSyllableRequired && firstWord !== lastSyllableRequired.toLowerCase()) {
-        showWordError(`❌ Lỗi: Từ mới phải bắt đầu bằng tiếng '${lastSyllableRequired.toUpperCase()}'!`);
-        return;
-    }
+        const entries = getWordChainEntries(game);
+        const previous = entries[entries.length - 1];
+        const previousWords = previous?.text?.trim().split(/\s+/) || [];
+        const requiredSyllable = (previousWords[1] || '').toLocaleLowerCase('vi-VN');
+        const alreadyUsed = entries.some(entry => entry.normalizedText === validated.fullPhrase);
+        if (validated.firstWord !== requiredSyllable || alreadyUsed) return;
 
-    if (usedWordsInRound.includes(fullPhraseLower)) {
-        showWordError(`❌ Lỗi: Cụm từ '${rawInput}' đã được dùng trong ván này rồi!`);
-        return;
-    }
-
-    const isValidMeaning = checkVietnameseWordValidity(firstWord, secondWord, fullPhraseLower);
-    if (!isValidMeaning) {
-        handleWordInvalidLoss(rawInput);
-        if (inputElem) inputElem.value = '';
-        return;
-    }
-
-    usedWordsInRound.push(fullPhraseLower);
-    lastSyllableRequired = secondWord;
-    lastWordPhrase = rawInput;
-
-    document.getElementById('lastWordDisplay').innerText = `"${rawInput}"`;
-    document.getElementById('requiredSyllableTag').innerText = secondWord.toUpperCase();
-
-    addWordChipToChain(rawInput, wordCurrentPlayer);
-    if (inputElem) inputElem.value = '';
-
-    wordCurrentPlayer = wordCurrentPlayer === 1 ? 2 : 1;
-    updateWordTurnDisplay();
-    resetWordTimer();
+        const moveId = `move_${Date.now()}_${role}`;
+        game.chain[moveId] = { text: validated.displayText, normalizedText: validated.fullPhrase, sender: role, sentAt: Date.now() };
+        game.currentPlayer = getOtherWordPlayer(role);
+        game.turnStartedAt = Date.now();
+        return game;
+    }).then(() => {
+        if (input) input.value = '';
+    }).catch(error => console.error('Không thể gửi từ Nối từ:', error));
 }
 
 function checkVietnameseWordValidity(w1, w2, fullPhrase) {
@@ -2349,60 +2694,63 @@ function checkVietnameseWordValidity(w1, w2, fullPhrase) {
     return true;
 }
 
-function handleWordInvalidLoss(invalidWord) {
-    stopWordTimer();
-    isWordRoundActive = false;
-
-    const loserName = wordCurrentPlayer === 1 ? "Skey" : "Pâu";
-    const winnerName = wordCurrentPlayer === 1 ? "Pâu" : "Skey";
-
-    if (wordCurrentPlayer === 1) {
-        wordP2Score++;
-        document.getElementById('wordP2Score').innerText = wordP2Score;
-    } else {
-        wordP1Score++;
-        document.getElementById('wordP1Score').innerText = wordP1Score;
-    }
-
-    showWordError(`❌ Từ '${invalidWord}' không có nghĩa hoặc không hợp lệ! ${loserName} bị xử thua ván này!`);
-    document.getElementById('wordTurnTitle').innerText = `🎉 ${winnerName} đã chiến thắng ván này! 🎉`;
-
-    triggerFireworks();
-    saveWordHistoryMatch(winnerName, `Từ rác: "${invalidWord}"`);
+function finishWordGame(game, winner, loser, reason) {
+    if (game.phase === 'finished') return;
+    game.scores[winner] = (Number(game.scores[winner]) || 0) + 1;
+    game.phase = 'finished';
+    game.finishedAt = Date.now();
+    game.result = {
+        winner,
+        loser,
+        reason,
+        message: `🏆 ${winner} thắng — ${reason}`
+    };
+    saveWordHistoryMatch(game);
 }
 
-function handleWordTimeOut() {
-    isWordRoundActive = false;
+function finishWordGameForInvalidPhrase(invalidPhrase) {
+    const role = getWordRole();
+    if (!role || typeof database === 'undefined' || !database) return;
 
-    const loserName = wordCurrentPlayer === 1 ? "Skey" : "Pâu";
-    const winnerName = wordCurrentPlayer === 1 ? "Pâu" : "Skey";
-
-    if (wordCurrentPlayer === 1) {
-        wordP2Score++;
-        document.getElementById('wordP2Score').innerText = wordP2Score;
-    } else {
-        wordP1Score++;
-        document.getElementById('wordP1Score').innerText = wordP1Score;
-    }
-
-    document.getElementById('wordTurnTitle').innerText = `⏱️ Hết 15s! ${loserName} quá thời gian ➔ ${winnerName} chiến thắng! 🎉`;
-
-    triggerFireworks();
-    saveWordHistoryMatch(winnerName, "Hết 15 giây");
+    database.ref(WORD_GAME_PATH).transaction((currentGame) => {
+        const game = normalizeWordGame(currentGame);
+        if (!hasBothWordPlayers(game) || game.phase !== 'playing' || game.currentPlayer !== role) return;
+        finishWordGame(game, getOtherWordPlayer(role), role, `“${invalidPhrase}” không hợp lệ`);
+        return game;
+    }).catch(error => console.error('Không thể xử lý từ không hợp lệ:', error));
 }
 
-function addWordChipToChain(word, playerNum) {
+function resolveWordTimeout() {
+    if (typeof database === 'undefined' || !database) return;
+
+    database.ref(WORD_GAME_PATH).transaction((currentGame) => {
+        const game = normalizeWordGame(currentGame);
+        const expired = Date.now() - Number(game.turnStartedAt) >= WORD_TURN_DURATION_MS;
+        if (!hasBothWordPlayers(game) || game.phase !== 'playing' || !expired) return;
+        const loser = game.currentPlayer;
+        finishWordGame(game, getOtherWordPlayer(loser), loser, `${loser} đã hết 15 giây`);
+        return game;
+    }).catch(error => console.error('Không thể xử lý hết giờ Nối từ:', error));
+}
+
+function renderWordChain(entries = getWordChainEntries()) {
     const container = document.getElementById('wordChainList');
     if (!container) return;
-    const emptyHint = container.querySelector('.empty-chain-hint');
-    if (emptyHint) emptyHint.remove();
+    container.innerHTML = '';
+    if (entries.length === 0) {
+        container.innerHTML = '<div class="empty-chain-hint">Ván đấu chưa bắt đầu. Chờ người mở đầu chọn cụm từ nhé!</div>';
+        return;
+    }
 
-    const pName = playerNum === 1 ? "Skey" : "Pâu";
-    const chip = document.createElement('div');
-    chip.className = 'word-chip';
-    chip.innerHTML = `<span class="chip-player">[${pName}]</span> ${word}`;
-
-    container.appendChild(chip);
+    entries.forEach(entry => {
+        const chip = document.createElement('div');
+        chip.className = 'word-chip';
+        const player = document.createElement('span');
+        player.className = 'chip-player';
+        player.innerText = `[${entry.sender || 'Người chơi'}]`;
+        chip.append(player, document.createTextNode(` ${entry.text}`));
+        container.appendChild(chip);
+    });
     container.scrollTop = container.scrollHeight;
 }
 
@@ -2422,33 +2770,69 @@ function hideWordError() {
     }
 }
 
-function resetWordScore() {
-    wordP1Score = 0;
-    wordP2Score = 0;
-    document.getElementById('wordP1Score').innerText = '0';
-    document.getElementById('wordP2Score').innerText = '0';
-    startWordGameRound();
+function requestNewWordRound() {
+    if (!hasBothWordPlayers(wordGameState)) {
+        alert('Cần có cả Skey và Pâu trong phòng để tạo ván Nối từ mới nhé!');
+        return;
+    }
+    if (wordGameState?.phase === 'playing') {
+        alert('Ván Nối từ đang diễn ra. Hãy chờ kết thúc ván rồi bắt đầu ván mới nhé!');
+        return;
+    }
+
+    database.ref(WORD_GAME_PATH).transaction((currentGame) => {
+        const game = normalizeWordGame(currentGame);
+        if (!hasBothWordPlayers(game) || game.phase === 'playing') return;
+        prepareWordRound(game, true);
+        return game;
+    }).catch(error => console.error('Không thể tạo ván Nối từ mới:', error));
 }
 
-function saveWordHistoryMatch(winner, reason) {
-    let history = JSON.parse(localStorage.getItem('word_match_history') || '[]');
-    const matchItem = {
-        time: new Date().toLocaleTimeString('vi-VN', { hour: '2-digit', minute: '2-digit' }),
-        winner: winner,
-        reason: reason,
-        score: `${wordP1Score} - ${wordP2Score}`
+// Giữ tên hàm cũ để tương thích các nút/đoạn mã đang gọi.
+function startWordGameRound() { requestNewWordRound(); }
+
+function resetWordScore() {
+    if (!hasBothWordPlayers(wordGameState)) {
+        alert('Cần có cả Skey và Pâu trong phòng để reset tỷ số nhé!');
+        return;
+    }
+    if (wordGameState?.phase === 'playing') {
+        alert('Không thể reset tỷ số khi ván Nối từ đang diễn ra nhé!');
+        return;
+    }
+
+    database.ref(WORD_GAME_PATH).transaction((currentGame) => {
+        const game = normalizeWordGame(currentGame);
+        if (!hasBothWordPlayers(game) || game.phase === 'playing') return;
+        game.scores = { Skey: 0, Pâu: 0 };
+        game.roundNumber = 1;
+        prepareWordRound(game);
+        return game;
+    }).catch(error => console.error('Không thể reset tỷ số Nối từ:', error));
+}
+
+function saveWordHistoryMatch(game) {
+    game.history = game.history && typeof game.history === 'object' ? game.history : {};
+    if (game.history[game.gameId]) return;
+    game.history[game.gameId] = {
+        gameId: game.gameId,
+        roundNumber: game.roundNumber,
+        winner: game.result?.winner || '',
+        loser: game.result?.loser || '',
+        reason: game.result?.reason || '',
+        scoreSkey: Number(game.scores.Skey) || 0,
+        scorePau: Number(game.scores.Pâu) || 0,
+        finishedAt: game.finishedAt || Date.now()
     };
-    history.unshift(matchItem);
-    if (history.length > 15) history.pop();
-    localStorage.setItem('word_match_history', JSON.stringify(history));
-    renderWordHistory();
 }
 
 function renderWordHistory() {
     const list = document.getElementById('wordHistoryList');
     if (!list) return;
 
-    let history = JSON.parse(localStorage.getItem('word_match_history') || '[]');
+    const history = Object.values(wordGameState?.history || {})
+        .filter(item => item && item.finishedAt)
+        .sort((a, b) => Number(b.finishedAt) - Number(a.finishedAt));
     list.innerHTML = '';
 
     if (history.length === 0) {
@@ -2459,11 +2843,9 @@ function renderWordHistory() {
     history.forEach((item, idx) => {
         const row = document.createElement('div');
         row.className = 'history-item-row';
-        row.innerHTML = `
-            <span>🕒 ${item.time} (Ván ${history.length - idx})</span>
-            <span class="winner-tag">🏆 ${item.winner} thắng (${item.reason})</span>
-            <span>Tỷ số: ${item.score}</span>
-        `;
+        const time = new Date(Number(item.finishedAt)).toLocaleTimeString('vi-VN', { hour: '2-digit', minute: '2-digit' });
+        row.innerHTML = `<span>🕒 ${time} (Ván ${Number(item.roundNumber) || history.length - idx})</span><span class="winner-tag"></span><span>Tỷ số: ${Number(item.scoreSkey) || 0} - ${Number(item.scorePau) || 0}</span>`;
+        row.querySelector('.winner-tag').innerText = `🏆 ${item.winner} thắng (${item.reason})`;
         list.appendChild(row);
     });
 }
@@ -3040,6 +3422,7 @@ function initFirebaseStatus() {
             if (typeof listenForRealtimePet === 'function') listenForRealtimePet(); // 👈 Bổ sung dòng này vào đây!
             if (typeof listenForGameInvitations === 'function') listenForGameInvitations(activeRole);
             if (typeof listenForRealtimeSlideshow === 'function') listenForRealtimeSlideshow();
+            if (typeof listenForRealtimeClockIcon === 'function') listenForRealtimeClockIcon();
 
         } catch (e) {
             console.error("Lỗi đồng bộ Firebase Status:", e);

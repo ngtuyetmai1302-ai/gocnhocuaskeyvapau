@@ -32,11 +32,19 @@
       ".read": true,
       ".write": true
     },
+    "clock_icon_state": {
+      ".read": true,
+      ".write": true
+    },
     "game_invitations": {
       ".read": true,
       ".write": true
     },
     "xo_game": {
+      ".read": true,
+      ".write": true
+    },
+    "word_game": {
       ".read": true,
       ".write": true
     }
