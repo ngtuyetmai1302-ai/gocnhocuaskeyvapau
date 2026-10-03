@@ -94,11 +94,11 @@
             <div class="user-status-widget">
                 <div id="statusPau" class="status-item offline">
                     <span class="status-icon">🐱</span>
-                    <span class="status-text">Pâu đã offline</span>
+                    <span>Pâu<span class="status-text">đang offline</span></span>
                 </div>
                 <div id="statusSkey" class="status-item offline">
                     <span class="status-icon">🐶</span>
-                    <span class="status-text">Skey đã offline</span>
+                    <span>Skey<span class="status-text">đang offline</span></span>
                 </div>
             </div>
 
@@ -162,7 +162,7 @@
     <div class="main-layout">
 
         <!-- CỘT BÊN TRÁI -->
-        <div class="photo-section">
+        <div class="left-section">
             <!-- 1. Đồng hồ ngày giờ + Icon hoa đổi màu 2 bên -->
             <div class="left-clock-widget">
                 <span id="flowerLeft" class="flower-icon" onclick="changeFlower('left')"
@@ -281,6 +281,7 @@
             <section class="interactive-section">
                 <h2>Gửi Lời Yêu Thương 💌</h2>
                 <button class="btn memory-btn" onclick="openAddMemoryModal()">Kỉ Niệm Mới 📸</button>
+                <a class="btn memory-corner-btn" href="memory-corner.html">Góc Kỷ Niệm 📷</a>
                 <button class="btn heart-btn" onclick="createHeartEffect()">Thả Tim ❤️</button>
             </section>
         </div>
@@ -613,7 +614,8 @@
                     <button id="startWordGameBtn" class="btn start-game-btn" onclick="confirmStartWordGame()">Bắt Đầu
                         ⏱️</button>
                 </div>
-                <p id="wordStartHint" class="word-rule-hint">💡 Khi bấm "Bắt Đầu ⏱️", đồng hồ 15 giây mới chính thức tính giờ!</p>
+                <p id="wordStartHint" class="word-rule-hint">💡 Khi bấm "Bắt Đầu ⏱️", đồng hồ 15 giây mới chính thức
+                    tính giờ!</p>
             </div>
 
             <!-- Khung Lượt chơi & Đồng hồ 15s (Ẩn khi chưa bấm Bắt đầu) -->
@@ -640,7 +642,8 @@
                 <!-- Khung Nhập Từ -->
                 <div class="word-input-section">
                     <p class="word-rule-hint">💡 Quy tắc: Nhập đúng <strong>2 từ</strong> (VD: <i>Thương nhớ</i> ➔
-                        <i>Nhớ nhung</i>)</p>
+                        <i>Nhớ nhung</i>)
+                    </p>
                     <div class="word-input-row">
                         <input type="text" id="wordInput" placeholder="Nhập từ 2 tiếng vào đây..."
                             onkeypress="handleWordInputEnter(event)" autocomplete="off">
