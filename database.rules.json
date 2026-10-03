@@ -1,0 +1,44 @@
+{
+  "rules": {
+    "status": {
+      ".read": true,
+      ".write": true
+    },
+    "pending_cards": {
+      ".read": true,
+      ".write": true
+    },
+    "archived_cards": {
+      ".read": true,
+      ".write": true
+    },
+    "letters": {
+      ".read": true,
+      ".write": true
+    },
+    "daily_chat": {
+      ".read": true,
+      ".write": true
+    },
+    "pet_state": {
+      ".read": true,
+      ".write": true
+    },
+    "music_state": {
+      ".read": true,
+      ".write": true
+    },
+    "slideshow_state": {
+      ".read": true,
+      ".write": true
+    },
+    "game_invitations": {
+      ".read": true,
+      ".write": true
+    },
+    "xo_game": {
+      ".read": true,
+      ".write": true
+    }
+  }
+}
