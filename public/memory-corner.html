@@ -34,6 +34,7 @@
       </div>
     </section>
 
+    <p id="memorySyncStatus" role="status" aria-live="polite">Dang ket noi...</p>
     <section class="memory-grid" id="memoryGrid" aria-live="polite"></section>
     <div class="empty-state hidden" id="emptyState"><div>🪄</div><h2>Góc này còn đang chờ kỷ niệm</h2><p>Hãy thêm một bức ảnh đầu tiên để bắt đầu lưu giữ câu chuyện của hai bạn.</p><button class="top-add" id="emptyAdd" type="button">＋ Thêm kỷ niệm đầu tiên</button></div>
 
@@ -54,6 +55,9 @@
     </div>
   </div>
   <div class="toast" id="toast" role="status"></div>
+  <script src="https://www.gstatic.com/firebasejs/10.8.0/firebase-app-compat.js"></script>
+  <script src="https://www.gstatic.com/firebasejs/10.8.0/firebase-database-compat.js"></script>
+  <script src="js/firebase-config.js"></script>
   <script src="js/memory-corner.js"></script>
 </body>
 </html>
