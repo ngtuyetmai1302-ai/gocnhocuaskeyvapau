@@ -1,4 +1,1103 @@
 <!DOCTYPE html>
+<html lang="vi">
+
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Skey & Pâu ❤️ Hành Trình Popo</title>
+    <link rel="stylesheet" href="css/style.css">
+    <link rel="stylesheet" href="css/watch-together.css">
+    <link
+        href="https://fonts.googleapis.com/css2?family=Dancing+Script:wght@700&family=Quicksand:wght@400;600;700&display=swap"
+        rel="stylesheet">
+</head>
+
+<body>
+    <!-- MÀN HÌNH BẢO VỆ MẬT KHẨU & CHỌN VAI TRÒ -->
+    <div id="passLockOverlay" class="pass-lock-overlay">
+        <div class="pass-lock-card">
+
+            <!-- BƯỚC 1: NHẬP MẬT KHẨU -->
+            <div id="passStep">
+                <div class="pass-lock-icon">💌</div>
+                <h3>NHẬP MẬT KHẨU TÌNH YÊU</h3>
+                <p class="pass-lock-subtitle">Trang web kỷ niệm dành riêng cho Skey & Pâu ❤️</p>
+
+                <div class="pass-input-group">
+                    <input type="password" id="sitePasswordInput" placeholder="Nhập mật khẩu vào đây..."
+                        onkeypress="handlePassEnter(event)">
+                    <button class="modal-btn pass-unlock-btn" onclick="checkSitePassword()">Mở Khóa ❤️</button>
+                </div>
+                <div id="passErrorMsg" class="pass-error-msg hidden"></div>
+                <p class="pass-hint">💡 Gợi ý: Ngày chính thức yêu nhau (8 chữ số )</p>
+            </div>
+
+            <!-- BƯỚC 2: BẠN LÀ SKEY HAY PÂU? -->
+            <div id="roleStep" class="hidden">
+                <h3 class="role-title">Bạn là Skey hay Pâu? 💕</h3>
+                <p class="role-subtitle">Bấm vào nhân vật của bạn để vào trang web nhé!</p>
+
+                <div class="role-options-container">
+                    <!-- Con Chó - Skey -->
+                    <div class="role-card" onclick="selectUserRole('Skey')">
+                        <div class="role-icon">🐶</div>
+                        <div class="role-name">Skey</div>
+                    </div>
+
+                    <!-- Con Mèo - Pâu -->
+                    <div class="role-card" onclick="selectUserRole('Pâu')">
+                        <div class="role-icon">🐱</div>
+                        <div class="role-name">Pâu</div>
+                    </div>
+                </div>
+            </div>
+
+        </div>
+    </div>
+    <!-- Canvas pháo hoa khi chiến thắng -->
+    <canvas id="fireworksCanvas" class="fireworks-canvas"></canvas>
+
+    <!-- Trình phát nhạc nền -->
+    <audio id="bgMusic">
+        <source id="musicSource" src="assets/audio/music1.mp3" type="audio/mpeg">
+    </audio>
+
+    <!-- KHUNG ĐỒNG HỒ & PHÁT NHẠC & THỜI TIẾT & GAME MENU Ở GÓC BÊN PHẢI -->
+    <!-- 🟢 CỤM WIDGETS GÓC TRÊN BÊN PHẢI (CHIA 2 CỘT ĐỘC LẬP) 🔴 -->
+    <div class="top-header-widgets">
+
+        <!-- CỘT 1 (BÊN TRÁI): NÚT CÀI ĐẶT, GÓC GAME, TRẠNG THÁI & THIỆP -->
+        <div class="header-left-col">
+            <div class="header-tools-row">
+                <button class="settings-gear-btn" onclick="openSettingsModal()" title="Tùy chỉnh giao diện">⚙️</button>
+                <div class="game-menu-dropdown">
+                    <button class="game-menu-btn">🎮 Góc Game <span class="dropdown-arrow">▼</span></button>
+                    <div class="game-menu-list">
+                        <div class="game-menu-item" onclick="openGameXOModal()">
+                            <span class="game-item-icon">❌⭕</span>
+                            <div class="game-item-text">
+                                <div class="game-item-title">Cờ Caro</div>
+                                <div class="game-item-desc">Đấu Caro icon hoa lá 10x10</div>
+                            </div>
+                        </div>
+                        <div class="game-menu-item" onclick="openWordGameModal()">
+                            <span class="game-item-icon">🔤</span>
+                            <div class="game-item-text">
+                                <div class="game-item-title">Nối Từ</div>
+                                <div class="game-item-desc">Thử thách 15s • Đúng 2 từ</div>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+
+            <!-- Khung Trạng Thái Online/Offline -->
+            <div class="user-status-widget">
+                <div id="statusPau" class="status-item offline">
+                    <span class="status-icon">🐱</span>
+                    <span>Pâu<span class="status-text">đang offline</span><small class="status-last-seen" hidden></small></span>
+                </div>
+                <div id="statusSkey" class="status-item offline">
+                    <span class="status-icon">🐶</span>
+                    <span>Skey<span class="status-text">đang offline</span><small class="status-last-seen" hidden></small></span>
+                </div>
+            </div>
+
+            <!-- Nút Thiệp Tình Yêu -->
+            <button class="watch-open-btn" id="watchOpen" type="button">▶ Xem YouTube cùng nhau</button>
+            <div class="card-widget-btn" onclick="openCardModal()" title="Mở Thiệp Tình Yêu">
+                <span class="card-btn-icon">💌</span>
+                <span class="card-btn-text">Thiệp Tình Yêu</span>
+            </div>
+        </div>
+
+        <!-- CỘT 2 (BÊN PHẢI): ÂM NHẠC, THỜI TIẾT & LỊCH THÁNG -->
+        <div class="header-right-col">
+            <!-- 1. Trình phát nhạc -->
+            <div class="music-player-widget">
+                <div id="songTitle" class="song-title">🎵 1. Yêu em rất nhiều - Hoàng Tôn</div>
+                <div class="music-controls">
+                    <button class="music-mini-btn" onclick="prevSong()" title="Bài trước">⏮️</button>
+                    <button id="musicToggleBtn" class="music-mini-btn play-btn" onclick="toggleMusic()"
+                        title="Bật/Tắt">▶️</button>
+                    <button class="music-mini-btn" onclick="nextSong()" title="Bài tiếp">⏭️</button>
+                </div>
+            </div>
+
+            <!-- 2. Khung thời tiết -->
+            <div class="weather-widget">
+                <div class="weather-header">
+                    <span id="weatherIcon">🌤️</span>
+                    <div class="weather-info">
+                        <div id="weatherTemp" class="weather-temp">--°C</div>
+                        <div id="weatherStatus" class="weather-status">Đang tải thời tiết...</div>
+                    </div>
+                </div>
+                <div id="weatherLocation" class="weather-location">📍 Hải Phòng</div>
+                <div id="weatherCareMessage" class="weather-care-message">
+                    "Skey & Pâu nhớ giữ gìn sức khỏe và luôn vui vẻ nhé! 💕"
+                </div>
+            </div>
+
+            <!-- 3. Bảng lịch tháng -->
+            <div class="month-calendar-widget">
+                <div class="calendar-header">
+                    <button class="cal-nav-btn" onclick="prevCalendarMonth()" title="Tháng trước">◀</button>
+                    <div class="cal-title-box">
+                        <span class="cal-icon">🗓️</span>
+                        <span id="calMonthTitle" class="cal-month-title">Tháng 9/2026</span>
+                    </div>
+                    <button class="cal-nav-btn" onclick="nextCalendarMonth()" title="Tháng sau">▶</button>
+                </div>
+                <div class="calendar-body">
+                    <div class="cal-weekdays">
+                        <span>T2</span><span>T3</span><span>T4</span><span>T5</span><span>T6</span><span>T7</span><span>CN</span>
+                    </div>
+                    <div id="calDaysGrid" class="cal-days-grid"></div>
+                </div>
+            </div>
+        </div>
+
+    </div>
+
+    <!-- BỐ CỤC CHÍNH -->
+    <div class="main-layout">
+
+        <!-- CỘT BÊN TRÁI -->
+        <div class="left-section">
+            <!-- 1. Đồng hồ ngày giờ + Icon hoa đổi màu 2 bên -->
+            <div class="left-clock-widget">
+                <span id="flowerLeft" class="flower-icon" onclick="changeFlower('left')"
+                    title="Bấm để đổi hoa!">🌸</span>
+                <div class="clock-content">
+                    <div id="clockDate" class="clock-date-text">📅 --/--/----</div>
+                    <div id="clockTime" class="clock-time-text">--:--:--</div>
+                </div>
+                <span id="flowerRight" class="flower-icon" onclick="changeFlower('right')"
+                    title="Bấm để đổi hoa!">🌸</span>
+            </div>
+
+            <!-- 2. Thông điệp tình yêu -->
+            <div id="loveQuote" class="love-quote">"Tình yêu không phải là nhìn nhau, mà là cùng nhau nhìn về một
+                hướng."</div>
+
+            <!-- 3. Khung ảnh kỷ niệm mờ viền -->
+            <div class="photo-wrapper">
+                <img id="slideshowImg" src="assets/images/photo1.jpg" alt="Ảnh kỷ niệm Skey & Pâu">
+            </div>
+
+            <!-- 4. Bao thư màu hồng - Góc tâm tình -->
+            <div class="envelope-section">
+                <div id="envelopeChatBubble" class="envelope-chat-bubble hidden" role="status" aria-live="polite"></div>
+                <section id="envelopeChatPanel" class="envelope-chat-panel hidden"
+                    aria-label="Hộp hội thoại Góc tâm tình">
+                    <div class="envelope-chat-panel-header">
+                        <div class="envelope-chat-partner">
+                            <span class="envelope-chat-avatar">💌</span>
+                            <input id="chatPartnerNickname" class="chat-partner-nickname" type="text" maxlength="30"
+                                aria-label="Biệt danh của đối phương" onblur="saveChatPartnerNickname()"
+                                onkeydown="handleChatNicknameKeydown(event)">
+                        </div>
+                        <button class="envelope-chat-close" type="button" onclick="closeEnvelopeChat()"
+                            aria-label="Đóng hộp hội thoại">×</button>
+                    </div>
+                    <div id="envelopeChatHistory" class="envelope-chat-history" aria-live="polite"></div>
+                    <div class="envelope-chat-composer">
+                        <textarea id="envelopeText" maxlength="1000" placeholder="Nhập tin nhắn..."
+                            onkeydown="handleEnvelopeChatKeydown(event)"></textarea>
+                        <button class="envelope-chat-send" type="button" onclick="sendEnvelopeMessage()"
+                            aria-label="Gửi tin nhắn">➤</button>
+                    </div>
+                </section>
+                <div class="envelope-card" role="button" tabindex="0" onclick="toggleEnvelopeChat()"
+                    onkeydown="handleEnvelopeWidgetKeydown(event)">
+                    <span class="envelope-icon">✉️</span>
+                    <span class="envelope-title">Góc Tâm Tình Mỗi Ngày 💌</span>
+                    <div id="envelopeBadge" class="envelope-badge hidden">1</div>
+                </div>
+            </div>
+        </div>
+
+        <!-- KHUNG NỘI DUNG CHÍNH (NẰM CHÍNH GIỮA) -->
+        <div class="container">
+            <header>
+                <h1 class="title">Hành Trình Yêu Thương</h1>
+                <div class="couple-names">
+                    <span id="name1">Skey</span>
+                    <span class="heart">❤️</span>
+                    <span id="name2">Pâu</span>
+                </div>
+            </header>
+
+            <!-- Bộ đếm ngày yêu nhau -->
+            <section class="counter-section">
+                <h2>Skey & Pâu đã bên nhau được:</h2>
+                <div id="timer" class="timer-box">
+                    <div class="time-card"><span id="days">0</span>
+                        <p>Ngày</p>
+                    </div>
+                    <div class="time-card"><span id="hours">0</span>
+                        <p>Giờ</p>
+                    </div>
+                    <div class="time-card"><span id="minutes">0</span>
+                        <p>Phút</p>
+                    </div>
+                    <div class="time-card"><span id="seconds">0</span>
+                        <p>Giây</p>
+                    </div>
+                </div>
+            </section>
+
+            <!-- Dòng thời gian kỷ niệm -->
+            <section class="timeline-section">
+                <h2>Cột Mốc Kỷ Niệm 📸</h2>
+                <p class="timeline-hint">💡 Bấm vào từng mốc để mở Khung Nhật Ký nhé!</p>
+                <div class="timeline" id="timelineList">
+                    <div class="timeline-item" onclick="openDiary('16/03/2021', 'Ngày Chính Thức Yêu Nhau')">
+                        <div class="date">16/03/2021 📖</div>
+                        <div class="content">
+                            <h3>Ngày Chính Thức Yêu Nhau</h3>
+                            <p>Mốc thời gian đặc biệt khởi đầu cho hành trình tình yêu ngọt ngào của Skey và Pâu.</p>
+                        </div>
+                    </div>
+
+                    <div class="timeline-item" onclick="openDiary('30/04 - 02/05/2026', 'Du lịch Cát Bà')">
+                        <div class="date">30/04 - 02/05/2026 📖</div>
+                        <div class="content">
+                            <h3>Du Lịch Cát Bà 🏝️</h3>
+                            <p>Chuyến đi vi vu biển đảo tuyệt đẹp cùng nhau, lưu giữ ngàn khoảnh khắc đẹp.</p>
+                        </div>
+                    </div>
+
+                    <div class="timeline-item" onclick="openDiary('15 - 16/08/2026', 'Du lịch Đồ Sơn')">
+                        <div class="date">15 - 16/08/2026 📖</div>
+                        <div class="content">
+                            <h3>Du Lịch Đồ Sơn 🌊</h3>
+                            <p>Kỳ nghỉ đong đầy niềm vui, tiếng cười và những phút giây bình yên bên nhau.</p>
+                        </div>
+                    </div>
+                </div>
+            </section>
+
+            <!-- Tương tác: Kỉ Niệm Mới & Thả tim -->
+            <section class="interactive-section">
+                <h2>Gửi Lời Yêu Thương 💌</h2>
+                <button class="btn memory-btn" onclick="openAddMemoryModal()">Kỉ Niệm Mới 📸</button>
+                <a class="btn memory-corner-btn" href="memory-corner.html">Góc Kỷ Niệm 📷</a>
+                <button class="btn heart-btn" onclick="createHeartEffect()">Thả Tim ❤️</button>
+            </section>
+        </div>
+    </div>
+
+    <!-- MODAL THÊM KỶ NIỆM MỚI -->
+    <div id="addMemoryModal" class="modal hidden">
+        <div class="modal-content memory-modal-content">
+            <span class="close-btn" onclick="closeAddMemoryModal()">&times;</span>
+            <h3 class="modal-section-title">📸 THÊM KỶ NIỆM MỚI</h3>
+            <p class="modal-subtitle">Lưu giữ thêm những khoảnh khắc tuyệt vời của Skey & Pâu</p>
+
+            <div class="memory-form-box">
+                <div class="form-group">
+                    <label>📅 Thời gian / Ngày kỷ niệm:</label>
+                    <input type="text" id="memoryDateInput" placeholder="Ví dụ: 20/10/2026 hoặc Ngày đặc biệt">
+                </div>
+                <div class="form-group">
+                    <label>✨ Tiêu đề cột mốc:</label>
+                    <input type="text" id="memoryTitleInput" placeholder="Ví dụ: Đi xem phim cùng nhau, Đi ăn tối...">
+                </div>
+                <div class="form-group">
+                    <label>📝 Cảm xúc & Kỷ niệm gửi gắm:</label>
+                    <textarea id="memoryContentInput" placeholder="Viết vài dòng cảm xúc ngọt ngào ở đây..."></textarea>
+                </div>
+                <button class="btn modal-btn" onclick="saveNewMemory()">Lưu Kỷ Niệm ❤️</button>
+            </div>
+        </div>
+    </div>
+
+    <!-- KHUNG NHẬT KÝ KỶ NIỆM (RỘNG TO BẰNG GIAO DIỆN GAME - 1000PX) -->
+    <div id="diaryModal" class="modal hidden">
+        <div class="modal-content large-diary-modal">
+            <span class="close-btn" onclick="closeDiary()">&times;</span>
+            <div class="diary-modal-header">
+                <h3 id="diaryTitle">📖 CẢM XÚC & KỶ NIỆM CỦA SKEY VÀ PÂU</h3>
+                <p id="diaryDate" class="diary-subtitle"></p>
+            </div>
+
+            <!-- Danh sách nhật ký hiển thị các thẻ cảm xúc rõ ràng -->
+            <div id="diaryList" class="diary-large-list"></div>
+
+            <!-- Khung nhập nhật ký mới -->
+            <div class="diary-input-box">
+                <div class="author-selector-row">
+                    <label>Gửi từ:</label>
+                    <select id="diaryAuthorSelect">
+                        <option value="Skey & Pâu">Skey & Pâu ❤️</option>
+                        <option value="Skey">Skey 👦</option>
+                        <option value="Pâu">Pâu 👧</option>
+                    </select>
+                </div>
+                <textarea id="diaryText"
+                    placeholder="Nhập thêm cảm xúc & kỷ niệm đáng nhớ của hai bạn vào đây..."></textarea>
+                <button class="btn save-diary-btn" onclick="saveDiaryEntry()">Lưu Cảm Xúc & Kỷ Niệm 📝</button>
+            </div>
+        </div>
+    </div>
+
+    <!-- MODAL ĐẶT TÊN CÚN XINH XẮN -->
+    <div id="petNameModal" class="modal hidden">
+        <div class="pet-name-modal-content">
+            <span class="close-btn" onclick="closePetNameModal()">&times;</span>
+            <div class="pet-name-header">
+                <h3>🐶 ĐẶT TÊN BÉ CÚN 🐾</h3>
+            </div>
+            <p class="pet-name-hint">
+                Hãy chọn một cái tên thật xinh xắn cho bé cún của Skey & Pâu nhé!<br>
+                <small>⚠️ Lưu ý: Tên chỉ đặt 1 lần duy nhất và không thể đổi lại</small>
+            </p>
+            <div class="pet-name-input-box">
+                <input type="text" id="petNameInput" placeholder="Nhập tên bé cún (VD: Mây, Bơ, Cún...)" maxlength="15">
+                <button class="modal-btn" onclick="savePetName()">Xác Nhận Đặt Tên ❤️</button>
+            </div>
+        </div>
+    </div>
+
+    <!-- KHUNG TỦ ĐỒ CỦA CÚN (LEVEL 4 -> 10) -->
+    <div id="closetModal" class="modal hidden">
+        <div class="closet-modal-content">
+            <span class="close-btn" onclick="closeCloset()">&times;</span>
+            <h3>👕 TỦ ĐỒ CỦA BÉ CÚN 🐾</h3>
+            <p class="closet-hint">Mở khóa trang phục mới khi lên Level (Level 4 ➔ 10)</p>
+
+            <div class="outfit-grid">
+                <!-- Bộ 1 (Lv 4) -->
+                <div id="outfitCard1" class="outfit-card locked" onclick="selectOutfit(1)">
+                    <div class="outfit-img-box">
+                        <img src="assets/images/dog-outfit1.png" alt="Bộ 1">
+                        <span class="lock-icon">🔒</span>
+                    </div>
+                    <p>Bộ Xinh Xắn (Lv 4)</p>
+                </div>
+
+                <!-- Bộ 2 (Lv 5) -->
+                <div id="outfitCard2" class="outfit-card locked" onclick="selectOutfit(2)">
+                    <div class="outfit-img-box">
+                        <img src="assets/images/dog-outfit2.png" alt="Bộ 2">
+                        <span class="lock-icon">🔒</span>
+                    </div>
+                    <p>Bộ Dễ Thương (Lv 5)</p>
+                </div>
+
+                <!-- Bộ 3 (Lv 6) -->
+                <div id="outfitCard3" class="outfit-card locked" onclick="selectOutfit(3)">
+                    <div class="outfit-img-box">
+                        <img src="assets/images/dog-outfit3.png" alt="Bộ 3">
+                        <span class="lock-icon">🔒</span>
+                    </div>
+                    <p>Bộ Quý Phái (Lv 6)</p>
+                </div>
+
+                <!-- Bộ 4 (Lv 7) -->
+                <div id="outfitCard4" class="outfit-card locked" onclick="selectOutfit(4)">
+                    <div class="outfit-img-box">
+                        <img src="assets/images/dog-outfit4.png" alt="Bộ 4">
+                        <span class="lock-icon">🔒</span>
+                    </div>
+                    <p>Bộ Hoàng Gia (Lv 7)</p>
+                </div>
+
+                <!-- Bộ 5 (Lv 8) -->
+                <div id="outfitCard5" class="outfit-card locked" onclick="selectOutfit(5)">
+                    <div class="outfit-img-box">
+                        <img src="assets/images/dog-outfit5.png" alt="Bộ 5">
+                        <span class="lock-icon">🔒</span>
+                    </div>
+                    <p>Bộ Tinh Tế (Lv 8)</p>
+                </div>
+
+                <!-- Bộ 6 (Lv 9) -->
+                <div id="outfitCard6" class="outfit-card locked" onclick="selectOutfit(6)">
+                    <div class="outfit-img-box">
+                        <img src="assets/images/dog-outfit6.png" alt="Bộ 6">
+                        <span class="lock-icon">🔒</span>
+                    </div>
+                    <p>Bộ Lộng Lẫy (Lv 9)</p>
+                </div>
+
+                <!-- Bộ 7 (Lv 10) -->
+                <div id="outfitCard7" class="outfit-card locked" onclick="selectOutfit(7)">
+                    <div class="outfit-img-box">
+                        <img src="assets/images/dog-outfit7.png" alt="Bộ 7">
+                        <span class="lock-icon">🔒</span>
+                    </div>
+                    <p>Bộ Thần Thoại (Lv 10)</p>
+                </div>
+            </div>
+
+            <button class="btn" onclick="removeOutfit()" style="margin-top: 15px;">Mặc Đồ Mặc Định</button>
+        </div>
+    </div>
+
+    <!-- MODAL GAME CARO -->
+    <div id="gameXOModal" class="modal hidden">
+        <div class="game-xo-modal-content">
+            <span class="close-btn" onclick="closeGameXOModal()">&times;</span>
+            <div class="game-modal-header">
+                <h3>❌⭕ CỜ CARO ❌⭕</h3>
+                <p class="game-modal-subtitle">Bàn đấu 10x10 rộng rãi - Thả cảm xúc & Lịch sử trận đấu</p>
+                <button id="inviteXoGameBtn" class="game-invite-btn" onclick="sendGameInvitation('xo')">💌 Mời người ấy
+                    chơi</button>
+            </div>
+
+            <div class="game-xo-layout">
+                <!-- BÊN TRÁI: NGƯỜI CHƠI 1 (SKEY) + KHUNG THẢ CẢM XÚC -->
+                <div class="player-panel left-panel">
+                    <div class="player-panel-header">
+                        <span class="p-badge p1-badge">P1</span>
+                        <h4>Skey (Người chơi 1)</h4>
+                    </div>
+
+                    <!-- Khung Chọn Icon P1 -->
+                    <div id="p1IconSelectBox" class="icon-select-box">
+                        <p class="select-label">Chọn quân cờ — icon này sẽ thay cho X/O:</p>
+                        <div class="icon-palette" id="p1IconPalette"></div>
+                    </div>
+
+                    <!-- Khung Thả Cảm Xúc P1 -->
+                    <div id="p1ReactionBox" class="player-reaction-box hidden">
+                        <div class="selected-icon-display">
+                            Icon Skey: <span id="p1SelectedIconDisplay" class="chosen-icon-symbol">--</span>
+                        </div>
+                        <div class="reaction-title">✨ Thả Cảm Xúc Vui Nhộn ✨</div>
+                        <div class="reaction-hint">Bấm icon để thả cảm xúc bay lên màn hình:</div>
+                        <div class="reaction-grid">
+                            <button class="reaction-btn" onclick="spawnGameFloatingEmoji('❤️')">❤️</button>
+                            <button class="reaction-btn" onclick="spawnGameFloatingEmoji('💖')">💖</button>
+                            <button class="reaction-btn" onclick="spawnGameFloatingEmoji('😂')">😂</button>
+                            <button class="reaction-btn" onclick="spawnGameFloatingEmoji('😭')">😭</button>
+                            <button class="reaction-btn" onclick="spawnGameFloatingEmoji('👏')">👏</button>
+                            <button class="reaction-btn" onclick="spawnGameFloatingEmoji('🎉')">🎉</button>
+                            <button class="reaction-btn" onclick="spawnGameFloatingEmoji('🔥')">🔥</button>
+                            <button class="reaction-btn" onclick="spawnGameFloatingEmoji('💩')">💩</button>
+                            <button class="reaction-btn" onclick="spawnGameFloatingEmoji('🌸')">🌸</button>
+                            <button class="reaction-btn" onclick="spawnGameFloatingEmoji('💣')">💣</button>
+                            <button class="reaction-btn" onclick="spawnGameFloatingEmoji('🌟')">🌟</button>
+                            <button class="reaction-btn" onclick="spawnGameFloatingEmoji('👻')">👻</button>
+                            <button class="reaction-btn" onclick="spawnGameFloatingEmoji('🥰')">🥰</button>
+                            <button class="reaction-btn" onclick="spawnGameFloatingEmoji('🥳')">🥳</button>
+                            <button class="reaction-btn" onclick="spawnGameFloatingEmoji('😜')">😜</button>
+                            <button class="reaction-btn" onclick="spawnGameFloatingEmoji('💪')">💪</button>
+                        </div>
+                    </div>
+                </div>
+
+                <!-- Ở GIỮA: BẢNG TỶ SỐ VÀ BẢNG GAME XO -->
+                <div class="game-center-panel">
+                    <!-- Bảng tỷ số -->
+                    <div class="scoreboard-card">
+                        <div class="score-player score-p1-box">
+                            <span id="scoreP1Icon" class="player-score-icon">👤</span>
+                            <span class="score-name">Skey</span>
+                            <span id="scoreP1Val" class="score-number">0</span>
+                        </div>
+                        <div class="score-vs-badge">VS</div>
+                        <div class="score-player score-p2-box">
+                            <span id="scoreP2Val" class="score-number">0</span>
+                            <span class="score-name">Pâu</span>
+                            <span id="scoreP2Icon" class="player-score-icon">👤</span>
+                        </div>
+                    </div>
+
+                    <!-- Trạng thái lượt đi -->
+                    <div id="gameTurnStatus" class="turn-status-bar">
+                        ⚠️ Vui lòng chọn Icon cho cả 2 người chơi để bắt đầu!
+                    </div>
+
+                    <!-- Bảng Grid 10x10 -->
+                    <div id="xoGridBoard" class="xo-grid-board"></div>
+
+                    <!-- Nút điều khiển -->
+                    <div class="game-control-btns">
+                        <button class="btn control-btn" onclick="resetXOGame(false)">🔄 Ván Mới</button>
+                        <button class="btn control-btn reselect-btn" onclick="resetXOGame(true)">🎨 Đổi Icon</button>
+                        <button class="btn control-btn history-btn" onclick="toggleXOHistory()">📜 Lịch Sử</button>
+                        <button class="btn control-btn reset-score-btn" onclick="resetXOScore()">🗑️ Reset Tỷ
+                            Số</button>
+                    </div>
+
+                    <!-- Lịch sử trận đấu XO -->
+                    <div id="xoHistoryBox" class="game-history-box hidden">
+                        <h4>📜 Lịch Sử Đấu Caro Skey & Pâu</h4>
+                        <div id="xoHistoryList" class="history-list"></div>
+                    </div>
+                </div>
+
+                <!-- BÊN PHẢI: NGƯỜI CHƠI 2 (PÂU) + KHUNG CHAT TRÒ CHUYỆN -->
+                <div class="player-panel right-panel">
+                    <div class="player-panel-header">
+                        <span class="p-badge p2-badge">P2</span>
+                        <h4>Pâu (Người chơi 2)</h4>
+                    </div>
+
+                    <!-- Khung Chọn Icon P2 -->
+                    <div id="p2IconSelectBox" class="icon-select-box">
+                        <p class="select-label">Chọn quân cờ — icon này sẽ thay cho X/O:</p>
+                        <div class="icon-palette" id="p2IconPalette"></div>
+                    </div>
+
+                    <!-- Khung Chat Trò Chuyện Chung -->
+                    <div id="p2ChatBox" class="player-chat-box hidden">
+                        <div class="selected-icon-display">
+                            💬 Chat chung của ván Caro
+                        </div>
+                        <div class="chat-messages-container" id="p2ChatMessages">
+                            <div class="system-chat-msg">💬 Trò chuyện cùng nhau khi chơi</div>
+                        </div>
+                        <div class="chat-input-row">
+                            <input type="text" id="p2InputMsg" placeholder="Nhập tin nhắn..."
+                                onkeypress="handleP2ChatEnter(event)">
+                            <button class="chat-send-btn p2-send-btn" onclick="sendP2Chat()">Gửi 💬</button>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- MODAL HỎI CHƠI LẠI SAU KHI THẮNG CARO -->
+    <div id="xoRematchModal" class="modal hidden">
+        <div class="xo-rematch-modal-content" role="dialog" aria-modal="true" aria-labelledby="xoRematchTitle">
+            <div class="xo-rematch-icon">🏆</div>
+            <h3 id="xoRematchTitle">Chúc mừng người chiến thắng!</h3>
+            <p id="xoRematchMessage">Bạn có muốn chơi lại không?</p>
+            <div id="xoRematchActions" class="xo-rematch-actions">
+                <button id="xoRematchYesBtn" type="button" class="btn xo-rematch-yes-btn"
+                    onclick="respondXORematch(true)">Có, chơi lại ✨</button>
+                <button id="xoRematchNoBtn" type="button" class="btn xo-rematch-no-btn"
+                    onclick="respondXORematch(false)">Không, kết thúc</button>
+            </div>
+            <button id="xoRematchDismissBtn" type="button" class="btn xo-rematch-dismiss-btn hidden"
+                onclick="dismissXORematchNotice()">Đã hiểu</button>
+            <div id="xoRematchVoteStatus" class="xo-rematch-vote-status" aria-live="polite"></div>
+        </div>
+    </div>
+
+    <!-- MODAL GAME NỐI TỪ -->
+    <div id="gameWordModal" class="modal hidden">
+        <div class="game-word-modal-content">
+            <span class="close-btn" onclick="closeWordGameModal()">&times;</span>
+            <div class="game-modal-header">
+                <h3>🔤 GAME NỐI TỪ 🔤</h3>
+                <p class="game-modal-subtitle">15 giây/lượt • Đúng 2 từ • Chọn từ khởi đầu rồi bấm Bắt Đầu!</p>
+                <button id="inviteWordGameBtn" class="game-invite-btn" onclick="sendGameInvitation('word')">💌 Mời người
+                    ấy chơi</button>
+            </div>
+
+            <!-- Bảng tỷ số Word Chain -->
+            <div class="word-scoreboard">
+                <div class="score-player score-p1-box">
+                    <span class="player-score-icon">👦</span>
+                    <span class="score-name">Skey</span>
+                    <span id="wordP1Score" class="score-number">0</span>
+                </div>
+                <div class="score-vs-badge">VS</div>
+                <div class="score-player score-p2-box">
+                    <span id="wordP2Score" class="score-number">0</span>
+                    <span class="score-name">Pâu</span>
+                    <span class="player-score-icon">👧</span>
+                </div>
+            </div>
+
+            <!-- Bước 1: Chọn từ khởi đầu trước khi bắt đầu -->
+            <div id="wordStartSetupCard" class="word-start-setup-card">
+                <div id="wordStartLabel" class="chain-label">📌 Nhập/Chọn cụm từ (2 tiếng) để khởi đầu ván chơi:</div>
+                <div class="start-input-row">
+                    <input type="text" id="startWordInput" placeholder="Ví dụ: Yêu thương, Bình yên..."
+                        value="Yêu thương">
+                    <button id="startWordGameBtn" class="btn start-game-btn" onclick="confirmStartWordGame()">Bắt Đầu
+                        ⏱️</button>
+                </div>
+                <p id="wordStartHint" class="word-rule-hint">💡 Khi bấm "Bắt Đầu ⏱️", đồng hồ 15 giây mới chính thức
+                    tính giờ!</p>
+            </div>
+
+            <!-- Khung Lượt chơi & Đồng hồ 15s (Ẩn khi chưa bấm Bắt đầu) -->
+            <div id="wordActiveGameArea" class="hidden">
+                <div class="word-timer-card">
+                    <div id="wordTurnTitle" class="word-turn-title">🎮 Lượt chơi: Skey</div>
+                    <div class="timer-countdown-row">
+                        <span class="timer-label">⏱️ Thời gian còn lại:</span>
+                        <span id="wordTimerNum" class="timer-seconds-big">15</span>
+                        <span class="timer-unit">giây</span>
+                    </div>
+                    <div class="word-timer-bar-bg">
+                        <div id="wordTimerBar" class="word-timer-bar-fill" style="width: 100%;"></div>
+                    </div>
+                </div>
+
+                <!-- Từ hiện tại cần nối -->
+                <div class="current-chain-card">
+                    <div class="chain-label">Từ cần nối tiếp theo (Bắt đầu bằng tiếng: <strong id="requiredSyllableTag"
+                            class="highlight-syllable">--</strong>):</div>
+                    <div id="lastWordDisplay" class="last-word-bubble">"Yêu thương"</div>
+                </div>
+
+                <!-- Khung Nhập Từ -->
+                <div class="word-input-section">
+                    <p class="word-rule-hint">💡 Quy tắc: Nhập đúng <strong>2 từ</strong> (VD: <i>Thương nhớ</i> ➔
+                        <i>Nhớ nhung</i>)
+                    </p>
+                    <div class="word-input-row">
+                        <input type="text" id="wordInput" placeholder="Nhập từ 2 tiếng vào đây..."
+                            onkeypress="handleWordInputEnter(event)" autocomplete="off">
+                        <button class="modal-btn word-submit-btn" onclick="submitWordChain()">Gửi Từ 🚀</button>
+                    </div>
+                    <div id="wordErrorMsg" class="word-error-msg hidden"></div>
+                </div>
+            </div>
+
+            <!-- Lịch sử các từ đã nối trong ván -->
+            <div class="word-chain-history">
+                <h4>📜 Chuỗi từ đã nối trong ván:</h4>
+                <div id="wordChainList" class="chain-words-container">
+                    <div class="empty-chain-hint">Ván đấu chưa bắt đầu. Nhập từ mở đầu và bấm Bắt Đầu!</div>
+                </div>
+            </div>
+
+            <!-- Nút điều khiển -->
+            <div class="game-control-btns" style="margin-top: 12px;">
+                <button class="btn control-btn" onclick="requestNewWordRound()">🔄 Ván Mới</button>
+                <button class="btn control-btn reset-score-btn" onclick="resetWordScore()">🗑️ Reset Tỷ Số</button>
+                <button class="btn control-btn history-btn" onclick="toggleWordHistory()">📜 Lịch Sử Đấu</button>
+            </div>
+
+            <!-- Bảng Lịch Sử Đấu Word Chain -->
+            <div id="wordHistoryBox" class="game-history-box hidden">
+                <h4>📜 Lịch Sử Thắng Thua Nối Từ</h4>
+                <div id="wordHistoryList" class="history-list"></div>
+            </div>
+        </div>
+    </div>
+
+    <!-- THÔNG BÁO LỜI MỜI CHƠI GAME TỪ NGƯỜI ẤY -->
+    <div id="gameInviteModal" class="modal hidden" role="dialog" aria-modal="true" aria-labelledby="gameInviteTitle">
+        <div class="game-invite-modal-content">
+            <div class="game-invite-icon">🎮💌</div>
+            <h3 id="gameInviteTitle">Bạn có lời mời chơi game!</h3>
+            <p id="gameInviteMessage">Người ấy đang chờ bạn tham gia.</p>
+            <div class="game-invite-actions">
+                <button class="btn game-invite-accept-btn" onclick="acceptGameInvitation()">Đồng ý chơi 💖</button>
+                <button class="btn game-invite-decline-btn" onclick="declineGameInvitation()">Từ chối</button>
+            </div>
+        </div>
+    </div>
+
+    <!-- THÔNG BÁO KHI LỜI MỜI CHƠI GAME BỊ TỪ CHỐI -->
+    <div id="gameInviteDeclinedModal" class="modal hidden" role="dialog" aria-modal="true"
+        aria-labelledby="gameInviteDeclinedTitle">
+        <div class="game-invite-modal-content game-invite-declined-modal-content">
+            <button class="close-btn" type="button" onclick="closeGameInviteDeclinedModal()"
+                aria-label="Đóng thông báo">×</button>
+            <div class="game-invite-icon">🥺🎮</div>
+            <h3 id="gameInviteDeclinedTitle">Lời mời chưa được nhận</h3>
+            <p>Sorry mình bận rồi, hẹn bạn lần sau chơi nhé.</p>
+            <button class="btn game-invite-declined-close-btn" type="button"
+                onclick="closeGameInviteDeclinedModal()">Mình hiểu rồi 💌</button>
+        </div>
+    </div>
+
+    <!-- BÉ CÚN CHIHUAHUA + HỆ THỐNG NUÔI CÚN (GÓC DƯỚI BÊN PHẢI) -->
+    <div class="pet-widget">
+        <!-- Bảng chỉ số to bằng size thanh thời tiết (width: 220px) -->
+        <div class="pet-stats-card">
+            <!-- 1. ĐƯA TÍNH NĂNG ĐẶT TÊN LÊN ĐẦU BẢNG -->
+            <div class="pet-header-info">
+                <span id="petNameDisplay" class="pet-name pet-name-clickable" onclick="promptPetName()"
+                    title="Bấm vào đây để đổi tên cho cún">🐶 Đặt tên cún ✏️</span>
+                <span id="petLevelDisplay" class="pet-level">Lv.1</span>
+            </div>
+
+            <!-- 2. Thanh Level / XP -->
+            <div class="stat-bar-container" title="Kinh nghiệm">
+                <span class="bar-label">XP:</span>
+                <div class="bar-bg">
+                    <div id="xpBar" class="bar-fill xp-fill" style="width: 0%;"></div>
+                </div>
+            </div>
+
+            <!-- 3. Thanh Độ No -->
+            <div class="stat-bar-container" title="Độ no">
+                <span class="bar-label">🍖:</span>
+                <div class="bar-bg">
+                    <div id="fullnessBar" class="bar-fill fullness-fill" style="width: 80%;"></div>
+                </div>
+            </div>
+
+            <!-- 4. Thanh Độ Vui -->
+            <div class="stat-bar-container" title="Độ vui (Thanh cuối cùng)">
+                <span class="bar-label">❤️:</span>
+                <div class="bar-bg">
+                    <div id="happinessBar" class="bar-fill happiness-fill" style="width: 80%;"></div>
+                </div>
+            </div>
+
+            <!-- ❌ KHÔNG CÒN NÚT setNameBtn Ở BÊN DƯỚI NÀY NỮA -->
+        </div>
+        <!-- Khoảng trống cố định dành riêng cho hội thoại của cún -->
+        <div class="pet-bubble-slot">
+            <div id="petBubble" class="pet-bubble hidden">Gâu gâu! Chào Skey & Pâu! 🐶</div>
+        </div>
+
+        <!-- Avatar hình Cún kích thước to (220px) + Lớp Quần Áo đè lên -->
+        <div class="pet-avatar" onclick="petBark()" title="Chạm vào tớ đi!">
+            <img id="petImg" src="assets/images/dog-normal.png" alt="Chihuahua dễ thương">
+            <img id="petOutfitImg" class="pet-outfit-layer hidden" src="" alt="Trang phục cún">
+        </div>
+
+        <!-- Nút điều khiển Chăm sóc & Tủ đồ -->
+        <div class="pet-controls">
+            <button class="pet-btn" onclick="feedPet()">🦴 Cho ăn</button>
+            <button class="pet-btn" onclick="patPet()">🐾 Xoa đầu</button>
+            <button id="closetBtn" class="pet-btn closet-btn hidden" onclick="openCloset()" title="Tủ đồ">👗 Tủ
+                Đồ</button>
+        </div>
+    </div>
+
+    <!-- MODAL BẢNG CÀI ĐẶT GIAO DIỆN -->
+    <div id="settingsModal" class="modal hidden">
+        <div class="modal-content settings-modal-content">
+            <span class="close-btn" onclick="closeSettingsModal()">&times;</span>
+            <div class="settings-modal-header">
+                <h3>⚙️ TÙY CHỈNH GIAO DIỆN ⚙️</h3>
+                <p class="settings-modal-subtitle">Thay đổi màu nền pastel & quản lý 5 ảnh slide tự động</p>
+            </div>
+
+            <!-- 1. CHỌN MÀU NỀN PASTEL -->
+            <div class="settings-section">
+                <h4>🎨 1. Chọn Màu Nền Pastel:</h4>
+                <div class="theme-color-palette">
+                    <button class="theme-color-btn theme-green-btn active" onclick="setSiteTheme('green')">
+                        <span class="color-preview green-preview"></span>
+                        <span class="color-label">Xanh Lá (Mặc định)</span>
+                    </button>
+                    <button class="theme-color-btn theme-pink-btn" onclick="setSiteTheme('pink')">
+                        <span class="color-preview pink-preview"></span>
+                        <span class="color-label">Hồng Pastel</span>
+                    </button>
+                    <button class="theme-color-btn theme-purple-btn" onclick="setSiteTheme('purple')">
+                        <span class="color-preview purple-preview"></span>
+                        <span class="color-label">Tím Pastel</span>
+                    </button>
+                    <button class="theme-color-btn theme-blue-btn" onclick="setSiteTheme('blue')">
+                        <span class="color-preview blue-preview"></span>
+                        <span class="color-label">Xanh Da Trời</span>
+                    </button>
+                    <button class="theme-color-btn theme-orange-btn" onclick="setSiteTheme('orange')">
+                        <span class="color-preview orange-preview"></span>
+                        <span class="color-label">Cam Pastel</span>
+                    </button>
+                </div>
+            </div>
+
+            <!-- 2.QUẢN LÝ 5 ẢNH SLIDE TỰ ĐỘNG -->
+            <div class="settings-section" style="margin-top: 22px;">
+                <h4>🖼️ 2. Quản Lý 5 Ảnh Slide Tự Động:</h4>
+                <p class="settings-hint">Bấm chọn file từ thiết bị để thay thế ảnh từng vị trí:</p>
+
+                <div class="photo-slots-grid">
+                    <div class="photo-slot-item">
+                        <label>📷 Ảnh 1:</label>
+                        <div class="slot-preview-box"><img id="slotPreview1" src="assets/images/photo1.jpg" alt="Ảnh 1">
+                        </div>
+                        <input type="file" id="photoInput1" accept="image/*" onchange="handlePhotoUpload(0, this)">
+                    </div>
+
+                    <div class="photo-slot-item">
+                        <label>📷 Ảnh 2:</label>
+                        <div class="slot-preview-box"><img id="slotPreview2" src="assets/images/photo2.jpg" alt="Ảnh 2">
+                        </div>
+                        <input type="file" id="photoInput2" accept="image/*" onchange="handlePhotoUpload(1, this)">
+                    </div>
+
+                    <div class="photo-slot-item">
+                        <label>📷 Ảnh 3:</label>
+                        <div class="slot-preview-box"><img id="slotPreview3" src="assets/images/photo3.jpg" alt="Ảnh 3">
+                        </div>
+                        <input type="file" id="photoInput3" accept="image/*" onchange="handlePhotoUpload(2, this)">
+                    </div>
+
+                    <div class="photo-slot-item">
+                        <label>📷 Ảnh 4:</label>
+                        <div class="slot-preview-box"><img id="slotPreview4" src="assets/images/photo4.jpg" alt="Ảnh 4">
+                        </div>
+                        <input type="file" id="photoInput4" accept="image/*" onchange="handlePhotoUpload(3, this)">
+                    </div>
+
+                    <div class="photo-slot-item">
+                        <label>📷 Ảnh 5:</label>
+                        <div class="slot-preview-box"><img id="slotPreview5" src="assets/images/photo5.jpg" alt="Ảnh 5">
+                        </div>
+                        <input type="file" id="photoInput5" accept="image/*" onchange="handlePhotoUpload(4, this)">
+                    </div>
+                </div>
+
+                <div class="settings-actions">
+                    <button class="btn reset-photos-btn" onclick="resetDefaultPhotos()">🔄 Khôi Phục 5 Ảnh Ban
+                        Đầu</button>
+                </div>
+            </div>
+        </div>
+    </div>
+    <!-- ========================================== -->
+    <!-- MODAL THIỆP TÌNH YÊU (TẠO THIỆP, MẪU & SÁNG TẠO) -->
+    <!-- ========================================== -->
+    <div id="cardModal" class="modal hidden">
+        <div class="modal-content card-modal-content">
+            <span class="close-btn" onclick="closeCardModal()">&times;</span>
+
+            <div class="card-modal-header">
+                <h3>💌 THIỆP TÌNH YÊU SKEY & PÂU 💌</h3>
+                <p class="card-modal-subtitle">Gửi gắm lời chúc, hẹn giờ bất ngờ & lưu giữ kỷ niệm</p>
+            </div>
+
+            <!-- Thanh Tab -->
+            <div class="card-tab-bar">
+                <button id="tabBtnCreateCard" class="card-tab-btn active" onclick="switchCardTab('create')">
+                    ✨ Tạo & Hẹn Giờ Thiệp
+                </button>
+                <button id="tabBtnArchiveCard" class="card-tab-btn" onclick="switchCardTab('archive')">
+                    📂 Kho Lưu Trữ Thiệp (<span id="cardArchiveCount">0</span>)
+                </button>
+            </div>
+
+            <!-- TAB 1: TẠO THIỆP MỚI -->
+            <div id="cardCreateView" class="card-tab-content">
+                <div class="card-editor-layout">
+                    <!-- Bên trái: Form tạo thiệp -->
+                    <div class="card-form-side">
+                        <!-- Chọn Mẫu Có Sẵn -->
+                        <div class="form-group">
+                            <label>📑 Chọn Mẫu Thiệp Có Sẵn (Template):</label>
+                            <select id="cardTemplateSelect" onchange="applyCardTemplate()">
+                                <option value="custom">✨ Thiệp Tự Sáng Tạo (Mặc định)</option>
+                                <option value="birthday">🎂 Chúc Mừng Sinh Nhật Sweetheart</option>
+                                <option value="anniversary">💖 Kỷ Niệm Ngày Yêu Nhau</option>
+                                <option value="thankyou">🌸 Lời Cảm Ơn Chân Thành</option>
+                                <option value="sorry">🥺 Lời Xin Lỗi Ngọt Ngào</option>
+                                <option value="daily">☕ Lời Nhắn Yêu Thương Hàng Ngày</option>
+                            </select>
+                        </div>
+
+                        <div class="form-row-2col">
+                            <div class="form-group">
+                                <label>👤 Người gửi:</label>
+                                <select id="cardSenderSelect" onchange="updateCardSenderOptions()">
+                                    <option value="Skey">Skey 👦</option>
+                                    <option value="Pâu">Pâu 👧</option>
+                                </select>
+                            </div>
+                            <div class="form-group">
+                                <label>🎁 Người nhận:</label>
+                                <select id="cardRecipientSelect" onchange="updateCardPreview()">
+                                    <option value="Pâu">Pâu 👧</option>
+                                    <option value="Skey">Skey 👦</option>
+                                </select>
+                            </div>
+                        </div>
+
+                        <div class="form-row-2col">
+                            <div class="form-group">
+                                <label>🎨 Mẫu / Màu Nền:</label>
+                                <select id="cardThemeSelect" onchange="updateCardPreview()">
+                                    <option value="pink">🌸 Hồng Ngọt Ngào</option>
+                                    <option value="green">🌿 Xanh Thiên Nhiên</option>
+                                    <option value="purple">✨ Tím Mộng Mơ</option>
+                                    <option value="gold">⭐ Vàng Ấm Áp</option>
+                                </select>
+                            </div>
+                            <div class="form-group">
+                                <label>⏰ Hẹn Ngày Nhận Thiệp:</label>
+                                <input type="date" id="cardScheduleDateInput" onchange="updateCardPreview()">
+                            </div>
+                        </div>
+
+                        <!-- Tải ảnh kỷ niệm -->
+                        <div class="form-group">
+                            <label>🖼️ Đính kèm ảnh kỷ niệm (Tùy chọn):</label>
+                            <div class="card-upload-row">
+                                <input type="file" id="cardImageInput" accept="image/*"
+                                    onchange="handleCardImageUpload(this)">
+                                <button type="button" class="remove-img-btn hidden" id="removeCardImgBtn"
+                                    onclick="removeCardImage()">🗑️ Xóa ảnh</button>
+                            </div>
+                        </div>
+
+                        <!-- Chọn Sticker Trang Trí -->
+                        <div class="form-group">
+                            <label>🧸 Đính Sticker trang trí lên thiệp:</label>
+                            <div class="sticker-palette">
+                                <span class="sticker-opt" onclick="toggleCardSticker('🧸')">🧸</span>
+                                <span class="sticker-opt" onclick="toggleCardSticker('👑')">👑</span>
+                                <span class="sticker-opt" onclick="toggleCardSticker('🎀')">🎀</span>
+                                <span class="sticker-opt" onclick="toggleCardSticker('💍')">💍</span>
+                                <span class="sticker-opt" onclick="toggleCardSticker('🌸')">🌸</span>
+                                <span class="sticker-opt" onclick="toggleCardSticker('🐾')">🐾</span>
+                                <span class="sticker-opt" onclick="toggleCardSticker('🎁')">🎁</span>
+                                <span class="sticker-opt" onclick="toggleCardSticker('💖')">💖</span>
+                                <span class="sticker-opt" onclick="toggleCardSticker('🐱')">🐱</span>
+                                <span class="sticker-opt" onclick="toggleCardSticker('🐶')">🐶</span>
+                            </div>
+                        </div>
+
+                        <div class="form-group">
+                            <label>✨ Tiêu đề tấm thiệp:</label>
+                            <input type="text" id="cardTitleInput" placeholder="Nhập tiêu đề thiệp..."
+                                oninput="updateCardPreview()">
+                        </div>
+
+                        <div class="form-group">
+                            <label>📝 Lời chúc / Lời nhắn gửi:</label>
+                            <textarea id="cardContentInput" placeholder="Nhập lời nhắn ngọt ngào..."
+                                oninput="updateCardPreview()"></textarea>
+                        </div>
+
+                        <button class="btn modal-btn save-card-btn" onclick="saveScheduledCard()">💌 Lên Lịch & Gửi
+                            Thiệp Bí Mật</button>
+                    </div>
+
+                    <!-- Bên phải: Live Preview -->
+                    <div class="card-preview-side">
+                        <div class="preview-title-tag">👁️ Xem trước tấm thiệp xem trực tiếp:</div>
+                        <div id="cardLivePreview" class="card-paper theme-pink">
+                            <div class="card-paper-header">
+                                <span class="card-stamp">💌</span>
+                                <div id="previewCardTitle" class="card-paper-title">Gửi Pâu Yêu Dấu 💕</div>
+                            </div>
+
+                            <!-- Khung ảnh đính kèm trên thiệp -->
+                            <div id="previewCardImgBox" class="card-paper-img-box hidden">
+                                <img id="previewCardImg" src="" alt="Ảnh thiệp">
+                            </div>
+
+                            <!-- Khung Sticker đính kèm -->
+                            <div id="previewCardStickers" class="card-paper-stickers"></div>
+
+                            <div id="previewCardBody" class="card-paper-body">
+                                Chúc Pâu của Skey luôn xinh đẹp, vui vẻ và hạnh phúc mỗi ngày!
+                            </div>
+
+                            <div class="card-paper-footer">
+                                <div id="previewCardScheduleDate" class="card-schedule-tag">⏰ Hẹn gửi: Hôm nay</div>
+                                <div id="previewCardSender" class="card-paper-sender">~ Từ Skey gửi Pâu ~</div>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+
+            <!-- TAB 2: KHO LƯU TRỮ THIỆP -->
+            <div id="cardArchiveView" class="card-tab-content hidden">
+                <div id="cardArchiveGrid" class="card-archive-grid"></div>
+            </div>
+        </div>
+    </div>
+    <!-- ========================================== -->
+    <!-- MODAL 1: THÔNG BÁO THIỆP BẤT NGỜ KHI ĐĂNG NHẬP -->
+    <!-- ========================================== -->
+    <div id="cardSurpriseModal" class="modal hidden">
+        <div class="modal-content surprise-modal-content">
+            <div class="surprise-icon-anim">💌</div>
+            <h3 class="surprise-title">BẤT NGỜ DÀNH CHO BẠN! 💕</h3>
+            <p id="surpriseMessageText" class="surprise-desc">
+                Bạn vừa nhận được 1 tấm thiệp bí mật! Bạn có muốn xem không?
+            </p>
+            <div class="surprise-btn-row">
+                <button class="surprise-btn btn-yes" onclick="openScheduledCardViewer()">Có 💕</button>
+                <button class="surprise-btn btn-sure" onclick="openScheduledCardViewer()">Tất nhiên rồi! 🥰</button>
+            </div>
+        </div>
+    </div>
+
+    <!-- ========================================== -->
+    <!-- MODAL 2: KHUNG ĐỌC THIỆP BẤT NGỜ & MỞ KHÓA -->
+    <!-- ========================================== -->
+    <div id="cardViewerModal" class="modal hidden">
+        <div class="modal-content card-viewer-modal-content">
+            <span class="close-btn" onclick="finishReadingScheduledCard()">&times;</span>
+            <div class="viewer-header-tag">🎁 THIỆP BÍ MẬT DÀNH TẶNG BẠN 🎁</div>
+
+            <div id="viewerCardPaper" class="card-paper theme-pink">
+                <div class="card-paper-header">
+                    <span class="card-stamp">💌</span>
+                    <div id="viewerCardTitle" class="card-paper-title">...</div>
+                </div>
+
+                <div id="viewerCardImgBox" class="card-paper-img-box hidden">
+                    <img id="viewerCardImg" src="" alt="Ảnh kỷ niệm">
+                </div>
+
+                <div id="viewerCardStickers" class="card-paper-stickers"></div>
+
+                <div id="viewerCardBody" class="card-paper-body">...</div>
+
+                <div class="card-paper-footer">
+                    <div id="viewerCardDate" class="card-schedule-tag">...</div>
+                    <div id="viewerCardSender" class="card-paper-sender">...</div>
+                </div>
+            </div>
+
+            <button class="btn modal-btn finish-card-btn" onclick="finishReadingScheduledCard()">
+                Đã đọc xong & Lưu vào Kho Thiệp 💌
+            </button>
+        </div>
+    </div>
+    <!-- 1. Thư viện Firebase -->
+    <div id="watchModal" class="watch-modal hidden" role="dialog" aria-modal="true" aria-labelledby="watchTitle">
+        <section class="watch-card">
+            <button id="watchClose" class="watch-close" type="button" aria-label="Đóng phòng xem">×</button>
+            <p class="watch-eyebrow">MỘT CHIẾC HẸN HÒ TẠI NHÀ ♡</p>
+            <h2 id="watchTitle">YouTube cùng nhau</h2>
+            <p>Cùng một video, cùng một khoảnh khắc. Cả hai hãy mở phòng này để xem nhé!</p>
+            <form id="watchForm" class="watch-form">
+                <label for="watchUrl" class="watch-sr-only">Đường dẫn video YouTube</label>
+                <input id="watchUrl" type="text" placeholder="Dán link YouTube hoặc Shorts…" required autocomplete="off">
+                <button id="watchLoad" type="submit" disabled>Chọn video</button>
+            </form>
+            <div class="watch-screen"><div id="watchPlayer"></div></div>
+            <div class="watch-controls">
+                <button id="watchPlay" type="button" disabled>▶ Phát</button>
+                <button id="watchPause" type="button" disabled>⏸ Tạm dừng</button>
+                <button id="watchJoin" type="button" disabled>♡ Bắt kịp phòng xem</button>
+                <label class="watch-volume"><input id="watchMute" type="checkbox"> Tắt tiếng máy này</label>
+            </div>
+            <label class="watch-timeline" for="watchSeek">Tua chung <span id="watchTime">0:00 / 0:00</span></label>
+            <input id="watchSeek" type="range" min="0" max="0" value="0" step="1" disabled aria-label="Tua video cho cả hai">
+            <p id="watchStatus" class="watch-status" role="status" aria-live="polite">Đang kết nối phòng xem…</p>
+            <p class="watch-hint">Dùng các nút bên dưới video để phát, tạm dừng và tua cho cả hai. Nếu chưa nghe thấy tiếng, bấm “Bắt kịp phòng xem”.</p>
+        </section>
+    </div>
+    <script src="https://www.gstatic.com/firebasejs/10.8.0/firebase-app-compat.js"></script>
+    <script src="https://www.gstatic.com/firebasejs/10.8.0/firebase-database-compat.js"></script>
+
+    <!-- 2. File script của web -->
+    <script src="js/presence.js"></script>
+    <script src="js/core.js"></script>
+    <script src="js/chat.js"></script>
+    <script src="js/timeline.js"></script>
+    <script src="js/music.js"></script>
+    <script src="js/diary.js"></script>
+    <script src="js/pet.js"></script>
+    <script src="js/game-caro.js"></script>
+    <script src="js/game-word.js"></script>
+    <script src="js/auth.js"></script>
+    <script src="js/settings.js"></script>
+    <script src="js/game-invitations.js"></script>
+    <script src="js/session.js"></script>
+    <script src="js/calendar.js"></script>
+    <script src="js/cards.js"></script>
+    <script src="js/script.js"></script>
+    <script src="js/watch-together.js"></script>
+</body>
+
 <html>
   <head>
     <meta charset="utf-8">

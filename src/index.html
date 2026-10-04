@@ -1,0 +1,176 @@
+<!DOCTYPE html>
+<html lang="vi">
+
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Skey & Pâu ❤️ Hành Trình Popo</title>
+    <link rel="stylesheet" href="css/style.css">
+    <link rel="stylesheet" href="css/watch-together.css">
+    <link
+        href="https://fonts.googleapis.com/css2?family=Dancing+Script:wght@700&family=Quicksand:wght@400;600;700&display=swap"
+        rel="stylesheet">
+</head>
+
+<body>
+    <!-- include: partials/lock-and-widgets.html -->
+    <!-- BỐ CỤC CHÍNH -->
+    <div class="main-layout">
+
+        <!-- CỘT BÊN TRÁI -->
+        <div class="left-section">
+            <!-- 1. Đồng hồ ngày giờ + Icon hoa đổi màu 2 bên -->
+            <div class="left-clock-widget">
+                <span id="flowerLeft" class="flower-icon" onclick="changeFlower('left')"
+                    title="Bấm để đổi hoa!">🌸</span>
+                <div class="clock-content">
+                    <div id="clockDate" class="clock-date-text">📅 --/--/----</div>
+                    <div id="clockTime" class="clock-time-text">--:--:--</div>
+                </div>
+                <span id="flowerRight" class="flower-icon" onclick="changeFlower('right')"
+                    title="Bấm để đổi hoa!">🌸</span>
+            </div>
+
+            <!-- 2. Thông điệp tình yêu -->
+            <div id="loveQuote" class="love-quote">"Tình yêu không phải là nhìn nhau, mà là cùng nhau nhìn về một
+                hướng."</div>
+
+            <!-- 3. Khung ảnh kỷ niệm mờ viền -->
+            <div class="photo-wrapper">
+                <img id="slideshowImg" src="assets/images/photo1.jpg" alt="Ảnh kỷ niệm Skey & Pâu">
+            </div>
+
+            <!-- 4. Bao thư màu hồng - Góc tâm tình -->
+            <div class="envelope-section">
+                <div id="envelopeChatBubble" class="envelope-chat-bubble hidden" role="status" aria-live="polite"></div>
+                <section id="envelopeChatPanel" class="envelope-chat-panel hidden"
+                    aria-label="Hộp hội thoại Góc tâm tình">
+                    <div class="envelope-chat-panel-header">
+                        <div class="envelope-chat-partner">
+                            <span class="envelope-chat-avatar">💌</span>
+                            <input id="chatPartnerNickname" class="chat-partner-nickname" type="text" maxlength="30"
+                                aria-label="Biệt danh của đối phương" onblur="saveChatPartnerNickname()"
+                                onkeydown="handleChatNicknameKeydown(event)">
+                        </div>
+                        <button class="envelope-chat-close" type="button" onclick="closeEnvelopeChat()"
+                            aria-label="Đóng hộp hội thoại">×</button>
+                    </div>
+                    <div id="envelopeChatHistory" class="envelope-chat-history" aria-live="polite"></div>
+                    <div class="envelope-chat-composer">
+                        <textarea id="envelopeText" maxlength="1000" placeholder="Nhập tin nhắn..."
+                            onkeydown="handleEnvelopeChatKeydown(event)"></textarea>
+                        <button class="envelope-chat-send" type="button" onclick="sendEnvelopeMessage()"
+                            aria-label="Gửi tin nhắn">➤</button>
+                    </div>
+                </section>
+                <div class="envelope-card" role="button" tabindex="0" onclick="toggleEnvelopeChat()"
+                    onkeydown="handleEnvelopeWidgetKeydown(event)">
+                    <span class="envelope-icon">✉️</span>
+                    <span class="envelope-title">Góc Tâm Tình Mỗi Ngày 💌</span>
+                    <div id="envelopeBadge" class="envelope-badge hidden">1</div>
+                </div>
+            </div>
+        </div>
+
+        <!-- KHUNG NỘI DUNG CHÍNH (NẰM CHÍNH GIỮA) -->
+        <div class="container">
+            <header>
+                <h1 class="title">Hành Trình Yêu Thương</h1>
+                <div class="couple-names">
+                    <span id="name1">Skey</span>
+                    <span class="heart">❤️</span>
+                    <span id="name2">Pâu</span>
+                </div>
+            </header>
+
+            <!-- Bộ đếm ngày yêu nhau -->
+            <section class="counter-section">
+                <h2>Skey & Pâu đã bên nhau được:</h2>
+                <div id="timer" class="timer-box">
+                    <div class="time-card"><span id="days">0</span>
+                        <p>Ngày</p>
+                    </div>
+                    <div class="time-card"><span id="hours">0</span>
+                        <p>Giờ</p>
+                    </div>
+                    <div class="time-card"><span id="minutes">0</span>
+                        <p>Phút</p>
+                    </div>
+                    <div class="time-card"><span id="seconds">0</span>
+                        <p>Giây</p>
+                    </div>
+                </div>
+            </section>
+
+            <!-- Dòng thời gian kỷ niệm -->
+            <section class="timeline-section">
+                <h2>Cột Mốc Kỷ Niệm 📸</h2>
+                <p class="timeline-hint">💡 Bấm vào từng mốc để mở Khung Nhật Ký nhé!</p>
+                <div class="timeline" id="timelineList">
+                    <div class="timeline-item" onclick="openDiary('16/03/2021', 'Ngày Chính Thức Yêu Nhau')">
+                        <div class="date">16/03/2021 📖</div>
+                        <div class="content">
+                            <h3>Ngày Chính Thức Yêu Nhau</h3>
+                            <p>Mốc thời gian đặc biệt khởi đầu cho hành trình tình yêu ngọt ngào của Skey và Pâu.</p>
+                        </div>
+                    </div>
+
+                    <div class="timeline-item" onclick="openDiary('30/04 - 02/05/2026', 'Du lịch Cát Bà')">
+                        <div class="date">30/04 - 02/05/2026 📖</div>
+                        <div class="content">
+                            <h3>Du Lịch Cát Bà 🏝️</h3>
+                            <p>Chuyến đi vi vu biển đảo tuyệt đẹp cùng nhau, lưu giữ ngàn khoảnh khắc đẹp.</p>
+                        </div>
+                    </div>
+
+                    <div class="timeline-item" onclick="openDiary('15 - 16/08/2026', 'Du lịch Đồ Sơn')">
+                        <div class="date">15 - 16/08/2026 📖</div>
+                        <div class="content">
+                            <h3>Du Lịch Đồ Sơn 🌊</h3>
+                            <p>Kỳ nghỉ đong đầy niềm vui, tiếng cười và những phút giây bình yên bên nhau.</p>
+                        </div>
+                    </div>
+                </div>
+            </section>
+
+            <!-- Tương tác: Kỉ Niệm Mới & Thả tim -->
+            <section class="interactive-section">
+                <h2>Gửi Lời Yêu Thương 💌</h2>
+                <button class="btn memory-btn" onclick="openAddMemoryModal()">Kỉ Niệm Mới 📸</button>
+                <a class="btn memory-corner-btn" href="memory-corner.html">Góc Kỷ Niệm 📷</a>
+                <button class="btn heart-btn" onclick="createHeartEffect()">Thả Tim ❤️</button>
+            </section>
+        </div>
+    </div>
+
+    <!-- include: partials/memory-dialogs.html -->
+    <!-- include: partials/pet-dialogs.html -->
+    <!-- include: partials/game-dialogs.html -->
+    <!-- include: partials/pet-widget.html -->
+    <!-- include: partials/settings-dialog.html -->
+    <!-- include: partials/card-dialogs.html -->
+    <!-- include: partials/watch-dialog.html -->
+    <script src="https://www.gstatic.com/firebasejs/10.8.0/firebase-app-compat.js"></script>
+    <script src="https://www.gstatic.com/firebasejs/10.8.0/firebase-database-compat.js"></script>
+
+    <!-- 2. File script của web -->
+    <script src="js/presence.js"></script>
+    <script src="js/core.js"></script>
+    <script src="js/chat.js"></script>
+    <script src="js/timeline.js"></script>
+    <script src="js/music.js"></script>
+    <script src="js/diary.js"></script>
+    <script src="js/pet.js"></script>
+    <script src="js/game-caro.js"></script>
+    <script src="js/game-word.js"></script>
+    <script src="js/auth.js"></script>
+    <script src="js/settings.js"></script>
+    <script src="js/game-invitations.js"></script>
+    <script src="js/session.js"></script>
+    <script src="js/calendar.js"></script>
+    <script src="js/cards.js"></script>
+    <script src="js/script.js"></script>
+    <script src="js/watch-together.js"></script>
+</body>
+
+</html>

@@ -1,0 +1,203 @@
+    <!-- ========================================== -->
+    <!-- MODAL THIỆP TÌNH YÊU (TẠO THIỆP, MẪU & SÁNG TẠO) -->
+    <!-- ========================================== -->
+    <div id="cardModal" class="modal hidden">
+        <div class="modal-content card-modal-content">
+            <span class="close-btn" onclick="closeCardModal()">&times;</span>
+
+            <div class="card-modal-header">
+                <h3>💌 THIỆP TÌNH YÊU SKEY & PÂU 💌</h3>
+                <p class="card-modal-subtitle">Gửi gắm lời chúc, hẹn giờ bất ngờ & lưu giữ kỷ niệm</p>
+            </div>
+
+            <!-- Thanh Tab -->
+            <div class="card-tab-bar">
+                <button id="tabBtnCreateCard" class="card-tab-btn active" onclick="switchCardTab('create')">
+                    ✨ Tạo & Hẹn Giờ Thiệp
+                </button>
+                <button id="tabBtnArchiveCard" class="card-tab-btn" onclick="switchCardTab('archive')">
+                    📂 Kho Lưu Trữ Thiệp (<span id="cardArchiveCount">0</span>)
+                </button>
+            </div>
+
+            <!-- TAB 1: TẠO THIỆP MỚI -->
+            <div id="cardCreateView" class="card-tab-content">
+                <div class="card-editor-layout">
+                    <!-- Bên trái: Form tạo thiệp -->
+                    <div class="card-form-side">
+                        <!-- Chọn Mẫu Có Sẵn -->
+                        <div class="form-group">
+                            <label>📑 Chọn Mẫu Thiệp Có Sẵn (Template):</label>
+                            <select id="cardTemplateSelect" onchange="applyCardTemplate()">
+                                <option value="custom">✨ Thiệp Tự Sáng Tạo (Mặc định)</option>
+                                <option value="birthday">🎂 Chúc Mừng Sinh Nhật Sweetheart</option>
+                                <option value="anniversary">💖 Kỷ Niệm Ngày Yêu Nhau</option>
+                                <option value="thankyou">🌸 Lời Cảm Ơn Chân Thành</option>
+                                <option value="sorry">🥺 Lời Xin Lỗi Ngọt Ngào</option>
+                                <option value="daily">☕ Lời Nhắn Yêu Thương Hàng Ngày</option>
+                            </select>
+                        </div>
+
+                        <div class="form-row-2col">
+                            <div class="form-group">
+                                <label>👤 Người gửi:</label>
+                                <select id="cardSenderSelect" onchange="updateCardSenderOptions()">
+                                    <option value="Skey">Skey 👦</option>
+                                    <option value="Pâu">Pâu 👧</option>
+                                </select>
+                            </div>
+                            <div class="form-group">
+                                <label>🎁 Người nhận:</label>
+                                <select id="cardRecipientSelect" onchange="updateCardPreview()">
+                                    <option value="Pâu">Pâu 👧</option>
+                                    <option value="Skey">Skey 👦</option>
+                                </select>
+                            </div>
+                        </div>
+
+                        <div class="form-row-2col">
+                            <div class="form-group">
+                                <label>🎨 Mẫu / Màu Nền:</label>
+                                <select id="cardThemeSelect" onchange="updateCardPreview()">
+                                    <option value="pink">🌸 Hồng Ngọt Ngào</option>
+                                    <option value="green">🌿 Xanh Thiên Nhiên</option>
+                                    <option value="purple">✨ Tím Mộng Mơ</option>
+                                    <option value="gold">⭐ Vàng Ấm Áp</option>
+                                </select>
+                            </div>
+                            <div class="form-group">
+                                <label>⏰ Hẹn Ngày Nhận Thiệp:</label>
+                                <input type="date" id="cardScheduleDateInput" onchange="updateCardPreview()">
+                            </div>
+                        </div>
+
+                        <!-- Tải ảnh kỷ niệm -->
+                        <div class="form-group">
+                            <label>🖼️ Đính kèm ảnh kỷ niệm (Tùy chọn):</label>
+                            <div class="card-upload-row">
+                                <input type="file" id="cardImageInput" accept="image/*"
+                                    onchange="handleCardImageUpload(this)">
+                                <button type="button" class="remove-img-btn hidden" id="removeCardImgBtn"
+                                    onclick="removeCardImage()">🗑️ Xóa ảnh</button>
+                            </div>
+                        </div>
+
+                        <!-- Chọn Sticker Trang Trí -->
+                        <div class="form-group">
+                            <label>🧸 Đính Sticker trang trí lên thiệp:</label>
+                            <div class="sticker-palette">
+                                <span class="sticker-opt" onclick="toggleCardSticker('🧸')">🧸</span>
+                                <span class="sticker-opt" onclick="toggleCardSticker('👑')">👑</span>
+                                <span class="sticker-opt" onclick="toggleCardSticker('🎀')">🎀</span>
+                                <span class="sticker-opt" onclick="toggleCardSticker('💍')">💍</span>
+                                <span class="sticker-opt" onclick="toggleCardSticker('🌸')">🌸</span>
+                                <span class="sticker-opt" onclick="toggleCardSticker('🐾')">🐾</span>
+                                <span class="sticker-opt" onclick="toggleCardSticker('🎁')">🎁</span>
+                                <span class="sticker-opt" onclick="toggleCardSticker('💖')">💖</span>
+                                <span class="sticker-opt" onclick="toggleCardSticker('🐱')">🐱</span>
+                                <span class="sticker-opt" onclick="toggleCardSticker('🐶')">🐶</span>
+                            </div>
+                        </div>
+
+                        <div class="form-group">
+                            <label>✨ Tiêu đề tấm thiệp:</label>
+                            <input type="text" id="cardTitleInput" placeholder="Nhập tiêu đề thiệp..."
+                                oninput="updateCardPreview()">
+                        </div>
+
+                        <div class="form-group">
+                            <label>📝 Lời chúc / Lời nhắn gửi:</label>
+                            <textarea id="cardContentInput" placeholder="Nhập lời nhắn ngọt ngào..."
+                                oninput="updateCardPreview()"></textarea>
+                        </div>
+
+                        <button class="btn modal-btn save-card-btn" onclick="saveScheduledCard()">💌 Lên Lịch & Gửi
+                            Thiệp Bí Mật</button>
+                    </div>
+
+                    <!-- Bên phải: Live Preview -->
+                    <div class="card-preview-side">
+                        <div class="preview-title-tag">👁️ Xem trước tấm thiệp xem trực tiếp:</div>
+                        <div id="cardLivePreview" class="card-paper theme-pink">
+                            <div class="card-paper-header">
+                                <span class="card-stamp">💌</span>
+                                <div id="previewCardTitle" class="card-paper-title">Gửi Pâu Yêu Dấu 💕</div>
+                            </div>
+
+                            <!-- Khung ảnh đính kèm trên thiệp -->
+                            <div id="previewCardImgBox" class="card-paper-img-box hidden">
+                                <img id="previewCardImg" src="" alt="Ảnh thiệp">
+                            </div>
+
+                            <!-- Khung Sticker đính kèm -->
+                            <div id="previewCardStickers" class="card-paper-stickers"></div>
+
+                            <div id="previewCardBody" class="card-paper-body">
+                                Chúc Pâu của Skey luôn xinh đẹp, vui vẻ và hạnh phúc mỗi ngày!
+                            </div>
+
+                            <div class="card-paper-footer">
+                                <div id="previewCardScheduleDate" class="card-schedule-tag">⏰ Hẹn gửi: Hôm nay</div>
+                                <div id="previewCardSender" class="card-paper-sender">~ Từ Skey gửi Pâu ~</div>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+
+            <!-- TAB 2: KHO LƯU TRỮ THIỆP -->
+            <div id="cardArchiveView" class="card-tab-content hidden">
+                <div id="cardArchiveGrid" class="card-archive-grid"></div>
+            </div>
+        </div>
+    </div>
+    <!-- ========================================== -->
+    <!-- MODAL 1: THÔNG BÁO THIỆP BẤT NGỜ KHI ĐĂNG NHẬP -->
+    <!-- ========================================== -->
+    <div id="cardSurpriseModal" class="modal hidden">
+        <div class="modal-content surprise-modal-content">
+            <div class="surprise-icon-anim">💌</div>
+            <h3 class="surprise-title">BẤT NGỜ DÀNH CHO BẠN! 💕</h3>
+            <p id="surpriseMessageText" class="surprise-desc">
+                Bạn vừa nhận được 1 tấm thiệp bí mật! Bạn có muốn xem không?
+            </p>
+            <div class="surprise-btn-row">
+                <button class="surprise-btn btn-yes" onclick="openScheduledCardViewer()">Có 💕</button>
+                <button class="surprise-btn btn-sure" onclick="openScheduledCardViewer()">Tất nhiên rồi! 🥰</button>
+            </div>
+        </div>
+    </div>
+
+    <!-- ========================================== -->
+    <!-- MODAL 2: KHUNG ĐỌC THIỆP BẤT NGỜ & MỞ KHÓA -->
+    <!-- ========================================== -->
+    <div id="cardViewerModal" class="modal hidden">
+        <div class="modal-content card-viewer-modal-content">
+            <span class="close-btn" onclick="finishReadingScheduledCard()">&times;</span>
+            <div class="viewer-header-tag">🎁 THIỆP BÍ MẬT DÀNH TẶNG BẠN 🎁</div>
+
+            <div id="viewerCardPaper" class="card-paper theme-pink">
+                <div class="card-paper-header">
+                    <span class="card-stamp">💌</span>
+                    <div id="viewerCardTitle" class="card-paper-title">...</div>
+                </div>
+
+                <div id="viewerCardImgBox" class="card-paper-img-box hidden">
+                    <img id="viewerCardImg" src="" alt="Ảnh kỷ niệm">
+                </div>
+
+                <div id="viewerCardStickers" class="card-paper-stickers"></div>
+
+                <div id="viewerCardBody" class="card-paper-body">...</div>
+
+                <div class="card-paper-footer">
+                    <div id="viewerCardDate" class="card-schedule-tag">...</div>
+                    <div id="viewerCardSender" class="card-paper-sender">...</div>
+                </div>
+            </div>
+
+            <button class="btn modal-btn finish-card-btn" onclick="finishReadingScheduledCard()">
+                Đã đọc xong & Lưu vào Kho Thiệp 💌
+            </button>
+        </div>
+    </div>

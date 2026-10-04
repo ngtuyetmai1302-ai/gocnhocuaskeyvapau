@@ -1,0 +1,268 @@
+    <!-- MODAL GAME CARO -->
+    <div id="gameXOModal" class="modal hidden">
+        <div class="game-xo-modal-content">
+            <span class="close-btn" onclick="closeGameXOModal()">&times;</span>
+            <div class="game-modal-header">
+                <h3>❌⭕ CỜ CARO ❌⭕</h3>
+                <p class="game-modal-subtitle">Bàn đấu 10x10 rộng rãi - Thả cảm xúc & Lịch sử trận đấu</p>
+                <button id="inviteXoGameBtn" class="game-invite-btn" onclick="sendGameInvitation('xo')">💌 Mời người ấy
+                    chơi</button>
+            </div>
+
+            <div class="game-xo-layout">
+                <!-- BÊN TRÁI: NGƯỜI CHƠI 1 (SKEY) + KHUNG THẢ CẢM XÚC -->
+                <div class="player-panel left-panel">
+                    <div class="player-panel-header">
+                        <span class="p-badge p1-badge">P1</span>
+                        <h4>Skey (Người chơi 1)</h4>
+                    </div>
+
+                    <!-- Khung Chọn Icon P1 -->
+                    <div id="p1IconSelectBox" class="icon-select-box">
+                        <p class="select-label">Chọn quân cờ — icon này sẽ thay cho X/O:</p>
+                        <div class="icon-palette" id="p1IconPalette"></div>
+                    </div>
+
+                    <!-- Khung Thả Cảm Xúc P1 -->
+                    <div id="p1ReactionBox" class="player-reaction-box hidden">
+                        <div class="selected-icon-display">
+                            Icon Skey: <span id="p1SelectedIconDisplay" class="chosen-icon-symbol">--</span>
+                        </div>
+                        <div class="reaction-title">✨ Thả Cảm Xúc Vui Nhộn ✨</div>
+                        <div class="reaction-hint">Bấm icon để thả cảm xúc bay lên màn hình:</div>
+                        <div class="reaction-grid">
+                            <button class="reaction-btn" onclick="spawnGameFloatingEmoji('❤️')">❤️</button>
+                            <button class="reaction-btn" onclick="spawnGameFloatingEmoji('💖')">💖</button>
+                            <button class="reaction-btn" onclick="spawnGameFloatingEmoji('😂')">😂</button>
+                            <button class="reaction-btn" onclick="spawnGameFloatingEmoji('😭')">😭</button>
+                            <button class="reaction-btn" onclick="spawnGameFloatingEmoji('👏')">👏</button>
+                            <button class="reaction-btn" onclick="spawnGameFloatingEmoji('🎉')">🎉</button>
+                            <button class="reaction-btn" onclick="spawnGameFloatingEmoji('🔥')">🔥</button>
+                            <button class="reaction-btn" onclick="spawnGameFloatingEmoji('💩')">💩</button>
+                            <button class="reaction-btn" onclick="spawnGameFloatingEmoji('🌸')">🌸</button>
+                            <button class="reaction-btn" onclick="spawnGameFloatingEmoji('💣')">💣</button>
+                            <button class="reaction-btn" onclick="spawnGameFloatingEmoji('🌟')">🌟</button>
+                            <button class="reaction-btn" onclick="spawnGameFloatingEmoji('👻')">👻</button>
+                            <button class="reaction-btn" onclick="spawnGameFloatingEmoji('🥰')">🥰</button>
+                            <button class="reaction-btn" onclick="spawnGameFloatingEmoji('🥳')">🥳</button>
+                            <button class="reaction-btn" onclick="spawnGameFloatingEmoji('😜')">😜</button>
+                            <button class="reaction-btn" onclick="spawnGameFloatingEmoji('💪')">💪</button>
+                        </div>
+                    </div>
+                </div>
+
+                <!-- Ở GIỮA: BẢNG TỶ SỐ VÀ BẢNG GAME XO -->
+                <div class="game-center-panel">
+                    <!-- Bảng tỷ số -->
+                    <div class="scoreboard-card">
+                        <div class="score-player score-p1-box">
+                            <span id="scoreP1Icon" class="player-score-icon">👤</span>
+                            <span class="score-name">Skey</span>
+                            <span id="scoreP1Val" class="score-number">0</span>
+                        </div>
+                        <div class="score-vs-badge">VS</div>
+                        <div class="score-player score-p2-box">
+                            <span id="scoreP2Val" class="score-number">0</span>
+                            <span class="score-name">Pâu</span>
+                            <span id="scoreP2Icon" class="player-score-icon">👤</span>
+                        </div>
+                    </div>
+
+                    <!-- Trạng thái lượt đi -->
+                    <div id="gameTurnStatus" class="turn-status-bar">
+                        ⚠️ Vui lòng chọn Icon cho cả 2 người chơi để bắt đầu!
+                    </div>
+
+                    <!-- Bảng Grid 10x10 -->
+                    <div id="xoGridBoard" class="xo-grid-board"></div>
+
+                    <!-- Nút điều khiển -->
+                    <div class="game-control-btns">
+                        <button class="btn control-btn" onclick="resetXOGame(false)">🔄 Ván Mới</button>
+                        <button class="btn control-btn reselect-btn" onclick="resetXOGame(true)">🎨 Đổi Icon</button>
+                        <button class="btn control-btn history-btn" onclick="toggleXOHistory()">📜 Lịch Sử</button>
+                        <button class="btn control-btn reset-score-btn" onclick="resetXOScore()">🗑️ Reset Tỷ
+                            Số</button>
+                    </div>
+
+                    <!-- Lịch sử trận đấu XO -->
+                    <div id="xoHistoryBox" class="game-history-box hidden">
+                        <h4>📜 Lịch Sử Đấu Caro Skey & Pâu</h4>
+                        <div id="xoHistoryList" class="history-list"></div>
+                    </div>
+                </div>
+
+                <!-- BÊN PHẢI: NGƯỜI CHƠI 2 (PÂU) + KHUNG CHAT TRÒ CHUYỆN -->
+                <div class="player-panel right-panel">
+                    <div class="player-panel-header">
+                        <span class="p-badge p2-badge">P2</span>
+                        <h4>Pâu (Người chơi 2)</h4>
+                    </div>
+
+                    <!-- Khung Chọn Icon P2 -->
+                    <div id="p2IconSelectBox" class="icon-select-box">
+                        <p class="select-label">Chọn quân cờ — icon này sẽ thay cho X/O:</p>
+                        <div class="icon-palette" id="p2IconPalette"></div>
+                    </div>
+
+                    <!-- Khung Chat Trò Chuyện Chung -->
+                    <div id="p2ChatBox" class="player-chat-box hidden">
+                        <div class="selected-icon-display">
+                            💬 Chat chung của ván Caro
+                        </div>
+                        <div class="chat-messages-container" id="p2ChatMessages">
+                            <div class="system-chat-msg">💬 Trò chuyện cùng nhau khi chơi</div>
+                        </div>
+                        <div class="chat-input-row">
+                            <input type="text" id="p2InputMsg" placeholder="Nhập tin nhắn..."
+                                onkeypress="handleP2ChatEnter(event)">
+                            <button class="chat-send-btn p2-send-btn" onclick="sendP2Chat()">Gửi 💬</button>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- MODAL HỎI CHƠI LẠI SAU KHI THẮNG CARO -->
+    <div id="xoRematchModal" class="modal hidden">
+        <div class="xo-rematch-modal-content" role="dialog" aria-modal="true" aria-labelledby="xoRematchTitle">
+            <div class="xo-rematch-icon">🏆</div>
+            <h3 id="xoRematchTitle">Chúc mừng người chiến thắng!</h3>
+            <p id="xoRematchMessage">Bạn có muốn chơi lại không?</p>
+            <div id="xoRematchActions" class="xo-rematch-actions">
+                <button id="xoRematchYesBtn" type="button" class="btn xo-rematch-yes-btn"
+                    onclick="respondXORematch(true)">Có, chơi lại ✨</button>
+                <button id="xoRematchNoBtn" type="button" class="btn xo-rematch-no-btn"
+                    onclick="respondXORematch(false)">Không, kết thúc</button>
+            </div>
+            <button id="xoRematchDismissBtn" type="button" class="btn xo-rematch-dismiss-btn hidden"
+                onclick="dismissXORematchNotice()">Đã hiểu</button>
+            <div id="xoRematchVoteStatus" class="xo-rematch-vote-status" aria-live="polite"></div>
+        </div>
+    </div>
+
+    <!-- MODAL GAME NỐI TỪ -->
+    <div id="gameWordModal" class="modal hidden">
+        <div class="game-word-modal-content">
+            <span class="close-btn" onclick="closeWordGameModal()">&times;</span>
+            <div class="game-modal-header">
+                <h3>🔤 GAME NỐI TỪ 🔤</h3>
+                <p class="game-modal-subtitle">15 giây/lượt • Đúng 2 từ • Chọn từ khởi đầu rồi bấm Bắt Đầu!</p>
+                <button id="inviteWordGameBtn" class="game-invite-btn" onclick="sendGameInvitation('word')">💌 Mời người
+                    ấy chơi</button>
+            </div>
+
+            <!-- Bảng tỷ số Word Chain -->
+            <div class="word-scoreboard">
+                <div class="score-player score-p1-box">
+                    <span class="player-score-icon">👦</span>
+                    <span class="score-name">Skey</span>
+                    <span id="wordP1Score" class="score-number">0</span>
+                </div>
+                <div class="score-vs-badge">VS</div>
+                <div class="score-player score-p2-box">
+                    <span id="wordP2Score" class="score-number">0</span>
+                    <span class="score-name">Pâu</span>
+                    <span class="player-score-icon">👧</span>
+                </div>
+            </div>
+
+            <!-- Bước 1: Chọn từ khởi đầu trước khi bắt đầu -->
+            <div id="wordStartSetupCard" class="word-start-setup-card">
+                <div id="wordStartLabel" class="chain-label">📌 Nhập/Chọn cụm từ (2 tiếng) để khởi đầu ván chơi:</div>
+                <div class="start-input-row">
+                    <input type="text" id="startWordInput" placeholder="Ví dụ: Yêu thương, Bình yên..."
+                        value="Yêu thương">
+                    <button id="startWordGameBtn" class="btn start-game-btn" onclick="confirmStartWordGame()">Bắt Đầu
+                        ⏱️</button>
+                </div>
+                <p id="wordStartHint" class="word-rule-hint">💡 Khi bấm "Bắt Đầu ⏱️", đồng hồ 15 giây mới chính thức
+                    tính giờ!</p>
+            </div>
+
+            <!-- Khung Lượt chơi & Đồng hồ 15s (Ẩn khi chưa bấm Bắt đầu) -->
+            <div id="wordActiveGameArea" class="hidden">
+                <div class="word-timer-card">
+                    <div id="wordTurnTitle" class="word-turn-title">🎮 Lượt chơi: Skey</div>
+                    <div class="timer-countdown-row">
+                        <span class="timer-label">⏱️ Thời gian còn lại:</span>
+                        <span id="wordTimerNum" class="timer-seconds-big">15</span>
+                        <span class="timer-unit">giây</span>
+                    </div>
+                    <div class="word-timer-bar-bg">
+                        <div id="wordTimerBar" class="word-timer-bar-fill" style="width: 100%;"></div>
+                    </div>
+                </div>
+
+                <!-- Từ hiện tại cần nối -->
+                <div class="current-chain-card">
+                    <div class="chain-label">Từ cần nối tiếp theo (Bắt đầu bằng tiếng: <strong id="requiredSyllableTag"
+                            class="highlight-syllable">--</strong>):</div>
+                    <div id="lastWordDisplay" class="last-word-bubble">"Yêu thương"</div>
+                </div>
+
+                <!-- Khung Nhập Từ -->
+                <div class="word-input-section">
+                    <p class="word-rule-hint">💡 Quy tắc: Nhập đúng <strong>2 từ</strong> (VD: <i>Thương nhớ</i> ➔
+                        <i>Nhớ nhung</i>)
+                    </p>
+                    <div class="word-input-row">
+                        <input type="text" id="wordInput" placeholder="Nhập từ 2 tiếng vào đây..."
+                            onkeypress="handleWordInputEnter(event)" autocomplete="off">
+                        <button class="modal-btn word-submit-btn" onclick="submitWordChain()">Gửi Từ 🚀</button>
+                    </div>
+                    <div id="wordErrorMsg" class="word-error-msg hidden"></div>
+                </div>
+            </div>
+
+            <!-- Lịch sử các từ đã nối trong ván -->
+            <div class="word-chain-history">
+                <h4>📜 Chuỗi từ đã nối trong ván:</h4>
+                <div id="wordChainList" class="chain-words-container">
+                    <div class="empty-chain-hint">Ván đấu chưa bắt đầu. Nhập từ mở đầu và bấm Bắt Đầu!</div>
+                </div>
+            </div>
+
+            <!-- Nút điều khiển -->
+            <div class="game-control-btns" style="margin-top: 12px;">
+                <button class="btn control-btn" onclick="requestNewWordRound()">🔄 Ván Mới</button>
+                <button class="btn control-btn reset-score-btn" onclick="resetWordScore()">🗑️ Reset Tỷ Số</button>
+                <button class="btn control-btn history-btn" onclick="toggleWordHistory()">📜 Lịch Sử Đấu</button>
+            </div>
+
+            <!-- Bảng Lịch Sử Đấu Word Chain -->
+            <div id="wordHistoryBox" class="game-history-box hidden">
+                <h4>📜 Lịch Sử Thắng Thua Nối Từ</h4>
+                <div id="wordHistoryList" class="history-list"></div>
+            </div>
+        </div>
+    </div>
+
+    <!-- THÔNG BÁO LỜI MỜI CHƠI GAME TỪ NGƯỜI ẤY -->
+    <div id="gameInviteModal" class="modal hidden" role="dialog" aria-modal="true" aria-labelledby="gameInviteTitle">
+        <div class="game-invite-modal-content">
+            <div class="game-invite-icon">🎮💌</div>
+            <h3 id="gameInviteTitle">Bạn có lời mời chơi game!</h3>
+            <p id="gameInviteMessage">Người ấy đang chờ bạn tham gia.</p>
+            <div class="game-invite-actions">
+                <button class="btn game-invite-accept-btn" onclick="acceptGameInvitation()">Đồng ý chơi 💖</button>
+                <button class="btn game-invite-decline-btn" onclick="declineGameInvitation()">Từ chối</button>
+            </div>
+        </div>
+    </div>
+
+    <!-- THÔNG BÁO KHI LỜI MỜI CHƠI GAME BỊ TỪ CHỐI -->
+    <div id="gameInviteDeclinedModal" class="modal hidden" role="dialog" aria-modal="true"
+        aria-labelledby="gameInviteDeclinedTitle">
+        <div class="game-invite-modal-content game-invite-declined-modal-content">
+            <button class="close-btn" type="button" onclick="closeGameInviteDeclinedModal()"
+                aria-label="Đóng thông báo">×</button>
+            <div class="game-invite-icon">🥺🎮</div>
+            <h3 id="gameInviteDeclinedTitle">Lời mời chưa được nhận</h3>
+            <p>Sorry mình bận rồi, hẹn bạn lần sau chơi nhé.</p>
+            <button class="btn game-invite-declined-close-btn" type="button"
+                onclick="closeGameInviteDeclinedModal()">Mình hiểu rồi 💌</button>
+        </div>
+    </div>
+
