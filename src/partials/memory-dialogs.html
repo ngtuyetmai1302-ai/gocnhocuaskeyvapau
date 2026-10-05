@@ -1,0 +1,54 @@
+    <!-- MODAL THÊM KỶ NIỆM MỚI -->
+    <div id="addMemoryModal" class="modal hidden">
+        <div class="modal-content memory-modal-content">
+            <span class="close-btn" onclick="closeAddMemoryModal()">&times;</span>
+            <h3 class="modal-section-title">📸 THÊM KỶ NIỆM MỚI</h3>
+            <p class="modal-subtitle">Lưu giữ thêm những khoảnh khắc tuyệt vời của Skey & Pâu</p>
+
+            <div class="memory-form-box">
+                <div class="form-group">
+                    <label>📅 Thời gian / Ngày kỷ niệm:</label>
+                    <input type="text" id="memoryDateInput" placeholder="Ví dụ: 20/10/2026 hoặc Ngày đặc biệt">
+                </div>
+                <div class="form-group">
+                    <label>✨ Tiêu đề cột mốc:</label>
+                    <input type="text" id="memoryTitleInput" placeholder="Ví dụ: Đi xem phim cùng nhau, Đi ăn tối...">
+                </div>
+                <div class="form-group">
+                    <label>📝 Cảm xúc & Kỷ niệm gửi gắm:</label>
+                    <textarea id="memoryContentInput" placeholder="Viết vài dòng cảm xúc ngọt ngào ở đây..."></textarea>
+                </div>
+                <button class="btn modal-btn" onclick="saveNewMemory()">Lưu Kỷ Niệm ❤️</button>
+            </div>
+        </div>
+    </div>
+
+    <!-- KHUNG NHẬT KÝ KỶ NIỆM (RỘNG TO BẰNG GIAO DIỆN GAME - 1000PX) -->
+    <div id="diaryModal" class="modal hidden">
+        <div class="modal-content large-diary-modal">
+            <span class="close-btn" onclick="closeDiary()">&times;</span>
+            <div class="diary-modal-header">
+                <h3 id="diaryTitle">📖 CẢM XÚC & KỶ NIỆM CỦA SKEY VÀ PÂU</h3>
+                <p id="diaryDate" class="diary-subtitle"></p>
+            </div>
+
+            <!-- Danh sách nhật ký hiển thị các thẻ cảm xúc rõ ràng -->
+            <div id="diaryList" class="diary-large-list"></div>
+
+            <!-- Khung nhập nhật ký mới -->
+            <div class="diary-input-box">
+                <div class="author-selector-row">
+                    <label>Gửi từ:</label>
+                    <select id="diaryAuthorSelect">
+                        <option value="Skey & Pâu">Skey & Pâu ❤️</option>
+                        <option value="Skey">Skey 👦</option>
+                        <option value="Pâu">Pâu 👧</option>
+                    </select>
+                </div>
+                <textarea id="diaryText"
+                    placeholder="Nhập thêm cảm xúc & kỷ niệm đáng nhớ của hai bạn vào đây..."></textarea>
+                <button class="btn save-diary-btn" onclick="saveDiaryEntry()">Lưu Cảm Xúc & Kỷ Niệm 📝</button>
+            </div>
+        </div>
+    </div>
+

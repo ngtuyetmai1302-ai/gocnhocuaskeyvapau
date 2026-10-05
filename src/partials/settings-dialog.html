@@ -1,0 +1,85 @@
+    <!-- MODAL BẢNG CÀI ĐẶT GIAO DIỆN -->
+    <div id="settingsModal" class="modal hidden">
+        <div class="modal-content settings-modal-content">
+            <span class="close-btn" onclick="closeSettingsModal()">&times;</span>
+            <div class="settings-modal-header">
+                <h3>⚙️ TÙY CHỈNH GIAO DIỆN ⚙️</h3>
+                <p class="settings-modal-subtitle">Thay đổi màu nền pastel & quản lý 5 ảnh slide tự động</p>
+            </div>
+
+            <!-- 1. CHỌN MÀU NỀN PASTEL -->
+            <div class="settings-section">
+                <h4>🎨 1. Chọn Màu Nền Pastel:</h4>
+                <div class="theme-color-palette">
+                    <button class="theme-color-btn theme-green-btn active" onclick="setSiteTheme('green')">
+                        <span class="color-preview green-preview"></span>
+                        <span class="color-label">Xanh Lá (Mặc định)</span>
+                    </button>
+                    <button class="theme-color-btn theme-pink-btn" onclick="setSiteTheme('pink')">
+                        <span class="color-preview pink-preview"></span>
+                        <span class="color-label">Hồng Pastel</span>
+                    </button>
+                    <button class="theme-color-btn theme-purple-btn" onclick="setSiteTheme('purple')">
+                        <span class="color-preview purple-preview"></span>
+                        <span class="color-label">Tím Pastel</span>
+                    </button>
+                    <button class="theme-color-btn theme-blue-btn" onclick="setSiteTheme('blue')">
+                        <span class="color-preview blue-preview"></span>
+                        <span class="color-label">Xanh Da Trời</span>
+                    </button>
+                    <button class="theme-color-btn theme-orange-btn" onclick="setSiteTheme('orange')">
+                        <span class="color-preview orange-preview"></span>
+                        <span class="color-label">Cam Pastel</span>
+                    </button>
+                </div>
+            </div>
+
+            <!-- 2.QUẢN LÝ 5 ẢNH SLIDE TỰ ĐỘNG -->
+            <div class="settings-section" style="margin-top: 22px;">
+                <h4>🖼️ 2. Quản Lý 5 Ảnh Slide Tự Động:</h4>
+                <p class="settings-hint">Bấm chọn file từ thiết bị để thay thế ảnh từng vị trí:</p>
+
+                <div class="photo-slots-grid">
+                    <div class="photo-slot-item">
+                        <label>📷 Ảnh 1:</label>
+                        <div class="slot-preview-box"><img id="slotPreview1" src="assets/images/photo1.jpg" alt="Ảnh 1">
+                        </div>
+                        <input type="file" id="photoInput1" accept="image/*" onchange="handlePhotoUpload(0, this)">
+                    </div>
+
+                    <div class="photo-slot-item">
+                        <label>📷 Ảnh 2:</label>
+                        <div class="slot-preview-box"><img id="slotPreview2" src="assets/images/photo2.jpg" alt="Ảnh 2">
+                        </div>
+                        <input type="file" id="photoInput2" accept="image/*" onchange="handlePhotoUpload(1, this)">
+                    </div>
+
+                    <div class="photo-slot-item">
+                        <label>📷 Ảnh 3:</label>
+                        <div class="slot-preview-box"><img id="slotPreview3" src="assets/images/photo3.jpg" alt="Ảnh 3">
+                        </div>
+                        <input type="file" id="photoInput3" accept="image/*" onchange="handlePhotoUpload(2, this)">
+                    </div>
+
+                    <div class="photo-slot-item">
+                        <label>📷 Ảnh 4:</label>
+                        <div class="slot-preview-box"><img id="slotPreview4" src="assets/images/photo4.jpg" alt="Ảnh 4">
+                        </div>
+                        <input type="file" id="photoInput4" accept="image/*" onchange="handlePhotoUpload(3, this)">
+                    </div>
+
+                    <div class="photo-slot-item">
+                        <label>📷 Ảnh 5:</label>
+                        <div class="slot-preview-box"><img id="slotPreview5" src="assets/images/photo5.jpg" alt="Ảnh 5">
+                        </div>
+                        <input type="file" id="photoInput5" accept="image/*" onchange="handlePhotoUpload(4, this)">
+                    </div>
+                </div>
+
+                <div class="settings-actions">
+                    <button class="btn reset-photos-btn" onclick="resetDefaultPhotos()">🔄 Khôi Phục 5 Ảnh Ban
+                        Đầu</button>
+                </div>
+            </div>
+        </div>
+    </div>

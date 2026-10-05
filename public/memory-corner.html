@@ -46,7 +46,8 @@
       <button class="modal-close" id="closeModal" type="button" aria-label="Đóng">×</button>
       <p class="eyebrow">LƯU LẠI MỘT ĐIỀU DỄ THƯƠNG</p><h2 id="memoryModalTitle">Thêm kỷ niệm mới</h2>
       <form id="memoryForm">
-        <label class="upload-box" for="imageInput"><span id="uploadPreview">📸</span><strong id="uploadText">Chọn một bức ảnh</strong><small>JPG, PNG hoặc WEBP · tối đa 5MB</small><input id="imageInput" type="file" accept="image/*" required></label>
+        <label class="upload-box" for="imageInput"><span id="uploadPreview">📸</span><strong id="uploadText">Chọn hoặc thêm ảnh</strong><small>JPG, PNG hoặc WEBP · tối đa 5MB/ảnh · 10 ảnh/kỷ niệm</small><input id="imageInput" type="file" accept="image/jpeg,image/png,image/webp" multiple></label>
+        <div id="selectedImages" class="selected-images" aria-label="Ảnh đã chọn"></div>
         <div class="form-grid"><label>Tên kỷ niệm<input id="titleInput" type="text" maxlength="70" placeholder="Ví dụ: Bữa tối đầu tiên" required></label><label>Ngày<input id="dateInput" type="date"></label></div>
         <label>Loại kỷ niệm<select id="categoryInput"><option value="food">🍜 Món ăn</option><option value="object">🎁 Đồ vật</option><option value="place">📍 Địa điểm</option><option value="moment">💌 Khoảnh khắc</option></select></label>
         <label>Ghi chú <span class="optional">(không bắt buộc)</span><textarea id="noteInput" maxlength="220" placeholder="Điều gì làm khoảnh khắc này đáng nhớ?"></textarea></label>
@@ -54,10 +55,17 @@
       </form>
     </div>
   </div>
+  <div id="imageViewer" class="image-viewer hidden" role="dialog" aria-modal="true" aria-labelledby="viewerTitle">
+    <button id="closeViewer" class="viewer-close" type="button" aria-label="Đóng ảnh">×</button>
+    <button id="prevImage" class="viewer-prev" type="button" aria-label="Ảnh trước">‹</button>
+    <figure><img id="viewerImage" alt=""><figcaption><span id="viewerTitle"></span> <span id="viewerCount"></span></figcaption></figure>
+    <button id="nextImage" class="viewer-next" type="button" aria-label="Ảnh tiếp">›</button>
+  </div>
   <div class="toast" id="toast" role="status"></div>
   <script src="https://www.gstatic.com/firebasejs/10.8.0/firebase-app-compat.js"></script>
   <script src="https://www.gstatic.com/firebasejs/10.8.0/firebase-database-compat.js"></script>
   <script src="js/firebase-config.js"></script>
   <script src="js/memory-corner.js"></script>
+  <script src="js/presence.js"></script>
 </body>
 </html>

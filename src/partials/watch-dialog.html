@@ -1,0 +1,25 @@
+    <!-- 1. Thư viện Firebase -->
+    <div id="watchModal" class="watch-modal hidden" role="dialog" aria-modal="true" aria-labelledby="watchTitle">
+        <section class="watch-card">
+            <button id="watchClose" class="watch-close" type="button" aria-label="Đóng phòng xem">×</button>
+            <p class="watch-eyebrow">MỘT CHIẾC HẸN HÒ TẠI NHÀ ♡</p>
+            <h2 id="watchTitle">YouTube cùng nhau</h2>
+            <p>Cùng một video, cùng một khoảnh khắc. Cả hai hãy mở phòng này để xem nhé!</p>
+            <form id="watchForm" class="watch-form">
+                <label for="watchUrl" class="watch-sr-only">Đường dẫn video YouTube</label>
+                <input id="watchUrl" type="text" placeholder="Dán link YouTube hoặc Shorts…" required autocomplete="off">
+                <button id="watchLoad" type="submit" disabled>Chọn video</button>
+            </form>
+            <div class="watch-screen"><div id="watchPlayer"></div></div>
+            <div class="watch-controls">
+                <button id="watchPlay" type="button" disabled>▶ Phát</button>
+                <button id="watchPause" type="button" disabled>⏸ Tạm dừng</button>
+                <button id="watchJoin" type="button" disabled>♡ Bắt kịp phòng xem</button>
+                <label class="watch-volume"><input id="watchMute" type="checkbox"> Tắt tiếng máy này</label>
+            </div>
+            <label class="watch-timeline" for="watchSeek">Tua chung <span id="watchTime">0:00 / 0:00</span></label>
+            <input id="watchSeek" type="range" min="0" max="0" value="0" step="1" disabled aria-label="Tua video cho cả hai">
+            <p id="watchStatus" class="watch-status" role="status" aria-live="polite">Đang kết nối phòng xem…</p>
+            <p class="watch-hint">Dùng các nút bên dưới video để phát, tạm dừng và tua cho cả hai. Nếu chưa nghe thấy tiếng, bấm “Bắt kịp phòng xem”.</p>
+        </section>
+    </div>

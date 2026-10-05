@@ -1,0 +1,147 @@
+    <!-- MÀN HÌNH BẢO VỆ MẬT KHẨU & CHỌN VAI TRÒ -->
+    <div id="passLockOverlay" class="pass-lock-overlay">
+        <div class="pass-lock-card">
+
+            <!-- BƯỚC 1: NHẬP MẬT KHẨU -->
+            <div id="passStep">
+                <div class="pass-lock-icon">💌</div>
+                <h3>NHẬP MẬT KHẨU TÌNH YÊU</h3>
+                <p class="pass-lock-subtitle">Trang web kỷ niệm dành riêng cho Skey & Pâu ❤️</p>
+
+                <div class="pass-input-group">
+                    <input type="password" id="sitePasswordInput" placeholder="Nhập mật khẩu vào đây..."
+                        onkeypress="handlePassEnter(event)">
+                    <button class="modal-btn pass-unlock-btn" onclick="checkSitePassword()">Mở Khóa ❤️</button>
+                </div>
+                <div id="passErrorMsg" class="pass-error-msg hidden"></div>
+                <p class="pass-hint">💡 Gợi ý: Ngày chính thức yêu nhau (8 chữ số )</p>
+            </div>
+
+            <!-- BƯỚC 2: BẠN LÀ SKEY HAY PÂU? -->
+            <div id="roleStep" class="hidden">
+                <h3 class="role-title">Bạn là Skey hay Pâu? 💕</h3>
+                <p class="role-subtitle">Bấm vào nhân vật của bạn để vào trang web nhé!</p>
+
+                <div class="role-options-container">
+                    <!-- Con Chó - Skey -->
+                    <div class="role-card" onclick="selectUserRole('Skey')">
+                        <div class="role-icon">🐶</div>
+                        <div class="role-name">Skey</div>
+                    </div>
+
+                    <!-- Con Mèo - Pâu -->
+                    <div class="role-card" onclick="selectUserRole('Pâu')">
+                        <div class="role-icon">🐱</div>
+                        <div class="role-name">Pâu</div>
+                    </div>
+                </div>
+            </div>
+
+        </div>
+    </div>
+    <!-- Canvas pháo hoa khi chiến thắng -->
+    <canvas id="fireworksCanvas" class="fireworks-canvas"></canvas>
+
+    <!-- Trình phát nhạc nền -->
+    <audio id="bgMusic">
+        <source id="musicSource" src="assets/audio/music1.mp3" type="audio/mpeg">
+    </audio>
+
+    <!-- KHUNG ĐỒNG HỒ & PHÁT NHẠC & THỜI TIẾT & GAME MENU Ở GÓC BÊN PHẢI -->
+    <!-- 🟢 CỤM WIDGETS GÓC TRÊN BÊN PHẢI (CHIA 2 CỘT ĐỘC LẬP) 🔴 -->
+    <div class="top-header-widgets">
+
+        <!-- CỘT 1 (BÊN TRÁI): NÚT CÀI ĐẶT, GÓC GAME, TRẠNG THÁI & THIỆP -->
+        <div class="header-left-col">
+            <div class="header-tools-row">
+                <button class="settings-gear-btn" onclick="openSettingsModal()" title="Tùy chỉnh giao diện">⚙️</button>
+                <div class="game-menu-dropdown">
+                    <button class="game-menu-btn">🎮 Góc Game <span class="dropdown-arrow">▼</span></button>
+                    <div class="game-menu-list">
+                        <div class="game-menu-item" onclick="openGameXOModal()">
+                            <span class="game-item-icon">❌⭕</span>
+                            <div class="game-item-text">
+                                <div class="game-item-title">Cờ Caro</div>
+                                <div class="game-item-desc">Đấu Caro icon hoa lá 10x10</div>
+                            </div>
+                        </div>
+                        <div class="game-menu-item" onclick="openWordGameModal()">
+                            <span class="game-item-icon">🔤</span>
+                            <div class="game-item-text">
+                                <div class="game-item-title">Nối Từ</div>
+                                <div class="game-item-desc">Thử thách 15s • Đúng 2 từ</div>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+
+            <!-- Khung Trạng Thái Online/Offline -->
+            <div class="user-status-widget">
+                <div id="statusPau" class="status-item offline">
+                    <span class="status-icon">🐱</span>
+                    <span>Pâu<span class="status-text">đang offline</span><small class="status-last-seen" hidden></small></span>
+                </div>
+                <div id="statusSkey" class="status-item offline">
+                    <span class="status-icon">🐶</span>
+                    <span>Skey<span class="status-text">đang offline</span><small class="status-last-seen" hidden></small></span>
+                </div>
+            </div>
+
+            <!-- Nút Thiệp Tình Yêu -->
+            <button class="watch-open-btn" id="watchOpen" type="button">▶ Xem YouTube cùng nhau</button>
+            <div class="card-widget-btn" onclick="openCardModal()" title="Mở Thiệp Tình Yêu">
+                <span class="card-btn-icon">💌</span>
+                <span class="card-btn-text">Thiệp Tình Yêu</span>
+            </div>
+        </div>
+
+        <!-- CỘT 2 (BÊN PHẢI): ÂM NHẠC, THỜI TIẾT & LỊCH THÁNG -->
+        <div class="header-right-col">
+            <!-- 1. Trình phát nhạc -->
+            <div class="music-player-widget">
+                <div id="songTitle" class="song-title">🎵 1. Yêu em rất nhiều - Hoàng Tôn</div>
+                <div class="music-controls">
+                    <button class="music-mini-btn" onclick="prevSong()" title="Bài trước">⏮️</button>
+                    <button id="musicToggleBtn" class="music-mini-btn play-btn" onclick="toggleMusic()"
+                        title="Bật/Tắt">▶️</button>
+                    <button class="music-mini-btn" onclick="nextSong()" title="Bài tiếp">⏭️</button>
+                </div>
+            </div>
+
+            <!-- 2. Khung thời tiết -->
+            <div class="weather-widget">
+                <div class="weather-header">
+                    <span id="weatherIcon">🌤️</span>
+                    <div class="weather-info">
+                        <div id="weatherTemp" class="weather-temp">--°C</div>
+                        <div id="weatherStatus" class="weather-status">Đang tải thời tiết...</div>
+                    </div>
+                </div>
+                <div id="weatherLocation" class="weather-location">📍 Hải Phòng</div>
+                <div id="weatherCareMessage" class="weather-care-message">
+                    "Skey & Pâu nhớ giữ gìn sức khỏe và luôn vui vẻ nhé! 💕"
+                </div>
+            </div>
+
+            <!-- 3. Bảng lịch tháng -->
+            <div class="month-calendar-widget">
+                <div class="calendar-header">
+                    <button class="cal-nav-btn" onclick="prevCalendarMonth()" title="Tháng trước">◀</button>
+                    <div class="cal-title-box">
+                        <span class="cal-icon">🗓️</span>
+                        <span id="calMonthTitle" class="cal-month-title">Tháng 9/2026</span>
+                    </div>
+                    <button class="cal-nav-btn" onclick="nextCalendarMonth()" title="Tháng sau">▶</button>
+                </div>
+                <div class="calendar-body">
+                    <div class="cal-weekdays">
+                        <span>T2</span><span>T3</span><span>T4</span><span>T5</span><span>T6</span><span>T7</span><span>CN</span>
+                    </div>
+                    <div id="calDaysGrid" class="cal-days-grid"></div>
+                </div>
+            </div>
+        </div>
+
+    </div>
+
